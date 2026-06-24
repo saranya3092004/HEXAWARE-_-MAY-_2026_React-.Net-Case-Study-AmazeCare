@@ -4,18 +4,13 @@ namespace AmazeCare.Server.Repository.Interfaces
 {
     public interface IAppointmentRepository
     {
-        Task<List<Appointment>> GetFilteredAsync(
-            int? patientUserId, int? doctorId, bool isAdmin,
-            AppointmentStatus? status, DateTime? fromDate, DateTime? toDate);
-
+        IQueryable<Appointment> GetQueryable();
         Task<Appointment?> GetByIdAsync(int appointmentId);
-        Task<Appointment?> GetByIdWithConsultationAsync(int appointmentId);
-
-        Task<int> GetAppointmentCountAsync();
+        Task<bool> PatientExistsAsync(int patientId);
+        Task<bool> DoctorExistsAsync(int doctorId);
+        Task<bool> HasConflictingAppointmentAsync(int doctorId, DateTime date, string timeSlot, int? excludeAppointmentId = null);
         Task<Appointment> AddAsync(Appointment appointment);
         Task UpdateAsync(Appointment appointment);
-        Task<Models.Patient?> GetPatientByIdAsync(int patientId);
-        Task<Doctor?> GetDoctorByIdAsync(int doctorId);
 
     }
 }

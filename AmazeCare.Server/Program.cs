@@ -9,6 +9,10 @@ using AmazeCare.Server.Modules.Extensions;
 using AmazeCare.Server.Modules.Middlewares; 
 using AmazeCare.Server.Modules.PatientModule.Repository;
 using AmazeCare.Server.Modules.PatientModule.Service;
+using AmazeCare.Server.Repository.Implementations;
+using AmazeCare.Server.Repository.Interfaces;
+using AmazeCare.Server.Services.Implementations;
+using AmazeCare.Server.Services.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
@@ -29,12 +33,11 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "QuitQ API",
+        Title = "AmazeCare",
         Version = "v1",
-        Description = "E-Commerce Backend API (Products, Orders, Cart)"
+        Description = "Amaze Care Backend API"
     });
 
-    //JWT Support
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -56,18 +59,15 @@ builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Logging.AddAmazeCareLog4Net();
 
-// 2. AUTOMATIC FLUENTVALIDATION REGISTRATION
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// 3. DATABASE CONTEXT
 builder.Services.AddDbContext<AmazeCareDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
 
-// 4. AUTH MODULE DEPENDENCY INJECTION
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -78,8 +78,14 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
 
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
-// 5. CUSTOM EXTENSION SERVICES (MISSING ADDED HERE)
+builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
+builder.Services.AddScoped<IConsultationService, ConsultationService>();
+
+
+
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();

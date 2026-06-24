@@ -7,7 +7,7 @@
         public string Qualification { get; set; } = string.Empty;
         public string Designation { get; set; } = string.Empty;
         public int ExperienceYears { get; set; }
-        public int SpecializationId { get; set; }
+        public string Specialization { get; set; } = string.Empty;
 
     }
 }

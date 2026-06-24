@@ -26,7 +26,7 @@ namespace AmazeCare.Server.Controller
         [AllowAnonymous]
         public async Task<IActionResult> Search([FromQuery] DoctorSearchRequest request)
         {
-            var result = await _doctorService.SearchAsync(request.Name, request.SpecializationId);
+            var result = await _doctorService.SearchAsync(request.Name, request.Specialization);
             return Ok(ApiResponse<List<DoctorResponse>>.OK(result));
         }
 

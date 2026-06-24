@@ -13,18 +13,13 @@ namespace AmazeCare.Server.Data
         public DbSet<Admin> Admins => Set<Admin>();
         public DbSet<Doctor> Doctors => Set<Doctor>();
         public DbSet<Patient> Patients => Set<Patient>();
-        public DbSet<Specialization> Specializations => Set<Specialization>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<Consultation> Consultations => Set<Consultation>();
-        public DbSet<Prescription> Prescriptions => Set<Prescription>();
-        public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
-        public DbSet<Medicine> Medicines => Set<Medicine>();
-        public DbSet<LabTestCatalog> LabTestCatalogs => Set<LabTestCatalog>();
-        public DbSet<LabTest> LabTests => Set<LabTest>();
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AmazeCareDBContext).Assembly);
-            SeedData.Seed(modelBuilder);
             base.OnModelCreating(modelBuilder);
 
         }

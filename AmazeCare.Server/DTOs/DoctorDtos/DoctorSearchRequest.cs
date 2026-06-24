@@ -3,6 +3,6 @@
     public class DoctorSearchRequest
     {
         public string? Name { get; set; }
-        public int? SpecializationId { get; set; }
+        public string? Specialization { get; set; } = String.Empty;
     }
 }

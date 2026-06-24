@@ -21,8 +21,7 @@
             public Appointment Appointment { get; set; } = null!;
             public Patient Patient { get; set; } = null!;
             public Doctor Doctor { get; set; } = null!;
-            public Prescription? Prescription { get; set; }
-            public ICollection<LabTest> LabTests { get; set; } = new List<LabTest>();
+
         }
     
 }

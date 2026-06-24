@@ -4,7 +4,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
 {
     public interface IDoctorService
     {
-        Task<List<DoctorResponse>> SearchAsync(string? name, int? specializationId);
+        Task<List<DoctorResponse>> SearchAsync(string? name, string? specialization);
         Task<DoctorResponse> GetProfileAsync(int doctorId);
         Task<List<AppointmentSummary>> GetDoctorAppointmentsAsync(int doctorId, bool upcomingOnly);
         Task<DoctorResponse> CreateDoctorAsync(CreateDoctorRequest request);

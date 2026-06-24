@@ -13,12 +13,10 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
             _context = context;
         }
 
-        // ================= DOCTOR ================
-        public async Task<List<Doctor>> SearchAsync(string? name, int? specializationId)
+        public async Task<List<Doctor>> SearchAsync(string? name, string? specialization)
         {
             var doctorsList = await _context.Doctors
                 .Where(d => d.IsActive)
-                .Include(d => d.Specialization)
                 .ToListAsync();
 
             if (!string.IsNullOrWhiteSpace(name))
@@ -27,9 +25,10 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
                 doctorsList = doctorsList.Where(d => d.Name.ToLower().Contains(term)).ToList();
             }
 
-            if (specializationId.HasValue)
+            if (!string.IsNullOrWhiteSpace(specialization))
             {
-                doctorsList = doctorsList.Where(d => d.SpecializationId == specializationId.Value).ToList();
+                var term = specialization.Trim().ToLower();
+                doctorsList = doctorsList.Where(d => d.Specialization.ToLower().Contains(term)).ToList();
             }
 
             return doctorsList.OrderBy(d => d.Name).ToList();
@@ -42,9 +41,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
 
         public async Task<Doctor?> GetByIdWithProfileAsync(int doctorId)
         {
-            return await _context.Doctors
-                .Include(d => d.Specialization)
-                .FirstOrDefaultAsync(d => d.DoctorId == doctorId);
+            return await _context.Doctors.FirstOrDefaultAsync(d => d.DoctorId == doctorId);
         }
 
         public async Task<Doctor> AddAsync(Doctor doctor)
@@ -78,16 +75,6 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
             return await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
 
-        // ================= SPECIALIZATION =================
-
-        public async Task<Specialization?> GetSpecializationByIdAsync(int specializationId)
-        {
-            return await _context.Specializations.FirstOrDefaultAsync(s => s.SpecializationId == specializationId);
-        }
-
-
-        // ================= APPOINTMENT =================
-
         public async Task<List<Appointment>> GetAppointmentsForDoctorAsync(int doctorId, bool upcomingOnly)
         {
             var query = _context.Appointments
@@ -103,24 +90,6 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
             }
 
             return await query.OrderBy(a => a.AppointmentDate).ThenBy(a => a.TimeSlot).ToListAsync();
-        }
-
- 
-        public async Task<List<Appointment>> GetBookedAppointmentsAsync(int doctorId, DateTime date)
-        {
-            return await _context.Appointments
-                .Where(a => a.DoctorId == doctorId
-                    && a.AppointmentDate.Date == date.Date
-                    && a.Status != AppointmentStatus.Cancelled
-                    && a.Status != AppointmentStatus.Rejected
-                    && a.Status != AppointmentStatus.NoShow)
-                .ToListAsync();
-        }
-        public async Task UpdateAppointmentAsync(Appointment appointment)
-        {
-            appointment.UpdatedAt = DateTime.UtcNow;
-            _context.Appointments.Update(appointment);
-            await _context.SaveChangesAsync();
         }
     }
 }

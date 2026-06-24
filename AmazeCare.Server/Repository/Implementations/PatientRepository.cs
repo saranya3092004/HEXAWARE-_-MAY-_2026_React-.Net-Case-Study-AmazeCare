@@ -38,8 +38,6 @@ namespace AmazeCare.Server.Modules.PatientModule.Repository
         {
             return await _context.Patients
                 .Include(p => p.Consultations).ThenInclude(c => c.Doctor)
-                .Include(p => p.Consultations).ThenInclude(c => c.Prescription)
-                .Include(p => p.Consultations).ThenInclude(c => c.LabTests)
                 .FirstOrDefaultAsync(p => p.PatientId == patientId);
         }
 

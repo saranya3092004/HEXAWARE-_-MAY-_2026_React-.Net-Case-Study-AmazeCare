@@ -101,9 +101,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Service
                         ConsultationDate = c.ConsultationDate,
                         DoctorName = c.Doctor?.Name ?? "Unknown",
                         Diagnosis = c.Diagnosis,
-                        CurrentSymptoms = c.CurrentSymptoms,
-                        HasPrescription = c.Prescription != null,
-                        LabTestCount = c.LabTests?.Count ?? 0
+                        CurrentSymptoms = c.CurrentSymptoms
                     })
                     .ToList()
             };

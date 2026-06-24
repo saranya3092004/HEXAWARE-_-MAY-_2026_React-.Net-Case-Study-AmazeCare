@@ -18,12 +18,12 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
 
         // ================= DOCTOR =================
 
-        public async Task<List<DoctorResponse>> SearchAsync(string? name, int? specializationId)
+        public async Task<List<DoctorResponse>> SearchAsync(string? name, string? specialization)
         {
-            var doctors = await _doctorRepository.SearchAsync(name, specializationId);
+            var doctors = await _doctorRepository.SearchAsync(name, specialization);
 
-            _logger.LogInformation("DoctorSearch: Name={Name}, SpecializationId={SpecId}, ResultCount={Count}.",
-                name, specializationId, doctors.Count);
+            _logger.LogInformation("DoctorSearch: Name={Name}, Specialty={Specialty}, ResultCount={Count}.",
+                name, specialization, doctors.Count);
 
             return doctors.Select(MapToResponse).ToList();
         }
@@ -41,12 +41,11 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
             {
                 DoctorId = doctor.DoctorId,
                 Name = doctor.Name,
+                Specialization = doctor.Specialization,
                 Qualification = doctor.Qualification,
                 Designation = doctor.Designation,
                 ExperienceYears = doctor.ExperienceYears,
-                IsActive = doctor.IsActive,
-                SpecializationId = doctor.SpecializationId,
-                SpecializationName = doctor.Specialization.Name
+                IsActive = doctor.IsActive
             };
         }
 
@@ -85,13 +84,6 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
                 throw new ConflictException("A user with this phone number already exists.");
             }
 
-            var specialization = await _doctorRepository.GetSpecializationByIdAsync(request.SpecializationId);
-            if (specialization == null)
-            {
-                _logger.LogWarning("CreateDoctor failed: SpecializationId {SpecId} not found.", request.SpecializationId);
-                throw new NotFoundException("Specialization not found.");
-            }
-
             var user = new User
             {
                 FullName = request.Name,
@@ -110,7 +102,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
             {
                 UserId = user.UserId,
                 Name = request.Name,
-                SpecializationId = request.SpecializationId,
+                Specialization = request.Specialization,
                 Qualification = request.Qualification,
                 Designation = request.Designation,
                 ExperienceYears = request.ExperienceYears,
@@ -136,15 +128,8 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
                 throw new NotFoundException("Doctor not found.");
             }
 
-            var specialization = await _doctorRepository.GetSpecializationByIdAsync(request.SpecializationId);
-            if (specialization == null)
-            {
-                _logger.LogWarning("UpdateDoctor failed: SpecializationId {SpecId} not found.", request.SpecializationId);
-                throw new NotFoundException("Specialization not found.");
-            }
-
             doctor.Name = request.Name;
-            doctor.SpecializationId = request.SpecializationId;
+            doctor.Specialization = request.Specialization;
             doctor.Qualification = request.Qualification;
             doctor.Designation = request.Designation;
             doctor.ExperienceYears = request.ExperienceYears;
@@ -183,12 +168,11 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
             {
                 DoctorId = doctor.DoctorId,
                 Name = doctor.Name,
+                Specialization = doctor.Specialization,
                 Qualification = doctor.Qualification,
                 Designation = doctor.Designation,
                 ExperienceYears = doctor.ExperienceYears,
-                IsActive = doctor.IsActive,
-                SpecializationId = doctor.SpecializationId,
-                SpecializationName = doctor.Specialization.Name
+                IsActive = doctor.IsActive
             };
         }
     }

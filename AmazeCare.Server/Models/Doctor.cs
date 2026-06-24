@@ -5,7 +5,7 @@
             public int DoctorId { get; set; }
             public int UserId { get; set; }                               // FK → User (for login)
             public string Name { get; set; } = string.Empty;
-            public int SpecializationId { get; set; }
+            public string Specialization { get; set; } = string.Empty;
             public string Qualification { get; set; } = string.Empty;    // e.g. MS (OG), MBBS
             public string Designation { get; set; } = string.Empty;      // e.g. Associate Professor/Consultant
             public int ExperienceYears { get; set; }
@@ -17,7 +17,6 @@
             public User User { get; set; } = null!;
      
 
-            public Specialization Specialization { get; set; } = null!;
             public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
             public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
         

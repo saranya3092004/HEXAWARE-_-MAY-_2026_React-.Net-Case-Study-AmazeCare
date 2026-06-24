@@ -14,47 +14,13 @@ namespace AmazeCare.Server.Repository.Implementations
             _context = context;
         }
 
-        public async Task<List<Appointment>> GetFilteredAsync(int? patientUserId, int? doctorId, bool isAdmin,AppointmentStatus? status, DateTime? fromDate, DateTime? toDate)
+        public IQueryable<Appointment> GetQueryable()
         {
-            var query = _context.Appointments
+            return _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor)
-                .Include(a => a.Specialization)
                 .Include(a => a.Consultation)
                 .AsQueryable();
-
-            if (!isAdmin)
-            {
-                if (patientUserId.HasValue)
-                {
-                    query = query.Where(a => a.Patient.UserId == patientUserId.Value);
-                }
-                else if (doctorId.HasValue)
-                {
-                    query = query.Where(a => a.DoctorId == doctorId.Value);
-                }
-                else
-                {
-                    return new List<Appointment>();
-                }
-            }
-
-            if (status.HasValue)
-            {
-                query = query.Where(a => a.Status == status.Value);
-            }
-
-            if (fromDate.HasValue)
-            {
-                query = query.Where(a => a.AppointmentDate.Date >= fromDate.Value.Date);
-            }
-
-            if (toDate.HasValue)
-            {
-                query = query.Where(a => a.AppointmentDate.Date <= toDate.Value.Date);
-            }
-
-            return await query.OrderByDescending(a => a.AppointmentDate).ThenBy(a => a.TimeSlot).ToListAsync();
         }
 
         public async Task<Appointment?> GetByIdAsync(int appointmentId)
@@ -62,23 +28,29 @@ namespace AmazeCare.Server.Repository.Implementations
             return await _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor)
-                .Include(a => a.Specialization)
-                .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
-        }
-
-        public async Task<Appointment?> GetByIdWithConsultationAsync(int appointmentId)
-        {
-            return await _context.Appointments
-                .Include(a => a.Patient)
-                .Include(a => a.Doctor)
-                .Include(a => a.Specialization)
                 .Include(a => a.Consultation)
                 .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
         }
 
-        public async Task<int> GetAppointmentCountAsync()
+        public async Task<bool> PatientExistsAsync(int patientId)
         {
-            return await _context.Appointments.CountAsync();
+            return await _context.Patients.AnyAsync(p => p.PatientId == patientId && p.IsActive);
+        }
+
+        public async Task<bool> DoctorExistsAsync(int doctorId)
+        {
+            return await _context.Doctors.AnyAsync(d => d.DoctorId == doctorId && d.IsActive);
+        }
+
+        public async Task<bool> HasConflictingAppointmentAsync(int doctorId, DateTime date, string timeSlot, int? excludeAppointmentId = null)
+        {
+            return await _context.Appointments.AnyAsync(a =>
+                a.DoctorId == doctorId
+                && a.AppointmentDate.Date == date.Date
+                && a.TimeSlot == timeSlot
+                && a.Status != AppointmentStatus.Cancelled
+                && a.Status != AppointmentStatus.Rejected
+                && (!excludeAppointmentId.HasValue || a.AppointmentId != excludeAppointmentId.Value));
         }
 
         public async Task<Appointment> AddAsync(Appointment appointment)
@@ -94,15 +66,6 @@ namespace AmazeCare.Server.Repository.Implementations
             _context.Appointments.Update(appointment);
             await _context.SaveChangesAsync();
         }
-
-        public async Task<Models.Patient?> GetPatientByIdAsync(int patientId)
-        {
-            return await _context.Patients.FirstOrDefaultAsync(p => p.PatientId == patientId);
-        }
-
-        public async Task<Doctor?> GetDoctorByIdAsync(int doctorId)
-        {
-            return await _context.Doctors.FirstOrDefaultAsync(d => d.DoctorId == doctorId);
-        }
     }
 }
+

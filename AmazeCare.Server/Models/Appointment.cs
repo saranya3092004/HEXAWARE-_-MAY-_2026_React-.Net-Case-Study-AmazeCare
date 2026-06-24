@@ -42,7 +42,7 @@
         public Patient Patient { get; set; } = null!;
         public Doctor Doctor { get; set; } = null!;
         public User BookedByUser { get; set; } = null!;
-        public Specialization? Specialization { get; set; }
+        public string Specialization { get; set; } = string.Empty;
         public Consultation? Consultation { get; set; }
     }
 }
