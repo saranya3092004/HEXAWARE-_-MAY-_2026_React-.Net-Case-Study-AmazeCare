@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace AmazeCare.Server.Controller
 {
     [ApiController]
-    [Route("api/v1/doctors")]
+    [Route("api/doctors")]
     [Authorize]
     public class DoctorController : ControllerBase
     {

@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AmazeCare.Server.Controller
 {
-    [Route("api/[controller]")]
+    [Route("api/appointments")]
     [ApiController]
     public class AppointmentController : ControllerBase
     {
@@ -99,6 +99,15 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment marked as completed."));
         }
 
+        // GET /api/appointments/available-slots?doctorId=5&date=2026-07-10
+        [HttpGet("available-slots")]
+        [Authorize(Roles = "User,Doctor,Admin")]
+        public async Task<IActionResult> GetAvailableSlots([FromQuery] int doctorId, [FromQuery] DateTime date)
+        {
+            var result = await _appointmentService.GetAvailableSlotsAsync(doctorId, date);
+            return Ok(ApiResponse<List<string>>.OK(result));
+        }
+
         // Reads role-specific profile id (PatientId/DoctorId/AdminId) from the JWT claims
         // set by JwtService.BuildToken(), matching the pattern used in DoctorController.
         private (int CallerId, bool IsAdmin, bool IsDoctor) GetCallerContext()
@@ -112,7 +121,7 @@ namespace AmazeCare.Server.Controller
             else if (isAdmin)
                 int.TryParse(User.FindFirstValue("AdminId"), out callerId);
             else
-                int.TryParse(User.FindFirstValue("PatientId"), out callerId);
+                int.TryParse(User.FindFirstValue("UserId"), out callerId);   // was "PatientId"
 
             return (callerId, isAdmin, isDoctor);
         }

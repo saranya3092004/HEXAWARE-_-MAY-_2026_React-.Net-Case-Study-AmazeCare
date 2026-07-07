@@ -11,6 +11,6 @@ namespace AmazeCare.Server.Repository.Interfaces
         Task<bool> HasConflictingAppointmentAsync(int doctorId, DateTime date, string timeSlot, int? excludeAppointmentId = null);
         Task<Appointment> AddAsync(Appointment appointment);
         Task UpdateAsync(Appointment appointment);
-
+        Task<List<string>> GetBookedSlotsAsync(int doctorId, DateTime date);
     }
 }

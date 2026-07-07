@@ -41,12 +41,6 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.2" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\amazecare.client\amazecare.client.esproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
 	
   <ItemGroup>
 		<None Update="log4net.config">

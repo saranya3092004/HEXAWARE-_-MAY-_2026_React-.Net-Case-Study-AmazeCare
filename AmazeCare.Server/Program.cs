@@ -1,4 +1,6 @@
 using AmazeCare.Server.Data;
+using AmazeCare.Server.Modules.AdminModule.Repository;
+using AmazeCare.Server.Modules.AdminModule.Service;
 using AmazeCare.Server.Modules.Auth.Repository.Implementation;
 using AmazeCare.Server.Modules.Auth.Repository.Interface;
 using AmazeCare.Server.Modules.Auth.Services.Implementation;
@@ -84,9 +86,13 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAmazeCareCors(builder.Configuration);
+
 
 var app = builder.Build();
 

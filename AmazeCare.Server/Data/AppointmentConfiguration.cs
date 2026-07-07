@@ -51,7 +51,7 @@ namespace AmazeCare.Server.Data
 
             builder.HasIndex(a => new { a.DoctorId, a.AppointmentDate, a.TimeSlot })
                    .IsUnique()
-                   .HasFilter("[Status] <> 'Cancelled' AND [Status] <> 'Rejected' AND [Status] <> 'NoShow'")
+                   .HasFilter("[Status] <> 'Cancelled' AND [Status] <> 'Rejected'")
                    .HasDatabaseName("IX_Appointments_Doctor_Date_TimeSlot_Unique");
 
             builder.HasIndex(a => new { a.DoctorId, a.AppointmentDate })

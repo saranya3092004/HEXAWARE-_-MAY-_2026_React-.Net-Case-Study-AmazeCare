@@ -5,7 +5,6 @@
             User,
             Doctor,
             Admin,
-            LabTechnician
         }
 
         public class User

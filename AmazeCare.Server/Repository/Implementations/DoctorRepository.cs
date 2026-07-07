@@ -15,23 +15,23 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
 
         public async Task<List<Doctor>> SearchAsync(string? name, string? specialization)
         {
-            var doctorsList = await _context.Doctors
+            var query = _context.Doctors
                 .Where(d => d.IsActive)
-                .ToListAsync();
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
                 var term = name.Trim().ToLower();
-                doctorsList = doctorsList.Where(d => d.Name.ToLower().Contains(term)).ToList();
+                query = query.Where(d => d.Name.ToLower().Contains(term));
             }
 
             if (!string.IsNullOrWhiteSpace(specialization))
             {
                 var term = specialization.Trim().ToLower();
-                doctorsList = doctorsList.Where(d => d.Specialization.ToLower().Contains(term)).ToList();
+                query = query.Where(d => d.Specialization.ToLower().Contains(term));
             }
 
-            return doctorsList.OrderBy(d => d.Name).ToList();
+            return await query.OrderBy(d => d.Name).ToListAsync();
         }
 
         public async Task<Doctor?> GetByIdAsync(int doctorId)

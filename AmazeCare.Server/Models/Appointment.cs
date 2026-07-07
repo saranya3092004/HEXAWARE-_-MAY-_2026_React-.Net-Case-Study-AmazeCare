@@ -7,8 +7,7 @@
         Completed,
         Cancelled,
         Rejected,
-        Rescheduled,
-        NoShow
+        Rescheduled
     }
 
     public enum VisitType
@@ -41,9 +40,6 @@
         // Navigation properties
         public Patient Patient { get; set; } = null!;
         public Doctor Doctor { get; set; } = null!;
-        public User BookedByUser { get; set; } = null!;
-        public string Specialization { get; set; } = string.Empty;
         public Consultation? Consultation { get; set; }
     }
 }
-

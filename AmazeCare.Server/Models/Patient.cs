@@ -8,28 +8,7 @@
             PreferNotToSay
         }
 
-        //public enum BloodGroup
-        //{
-        //    APositive,
-        //    ANegative,
-        //    BPositive,
-        //    BNegative,
-        //    ABPositive,
-        //    ABNegative,
-        //    OPositive,
-        //    ONegative,
-        //    Unknown
-        //}
 
-        public enum RelationshipType
-        {
-            Self,
-            Spouse,
-            Child,
-            Parent,
-            Sibling,
-            Other
-        }
 
         public class Patient
         {

@@ -4,6 +4,7 @@ using AmazeCare.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AmazeCare.Server.Migrations
 {
     [DbContext(typeof(AmazeCareDBContext))]
-    partial class AmazeCareDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260706181414_migratinadded")]
+    partial class migratinadded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,6 +71,9 @@ namespace AmazeCare.Server.Migrations
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("BookedByUserUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CancellationReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -86,6 +92,10 @@ namespace AmazeCare.Server.Migrations
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -112,6 +122,8 @@ namespace AmazeCare.Server.Migrations
                         .HasDefaultValue("GeneralCheckup");
 
                     b.HasKey("AppointmentId");
+
+                    b.HasIndex("BookedByUserUserId");
 
                     b.HasIndex("DoctorId", "AppointmentDate")
                         .HasDatabaseName("IX_Appointments_Doctor_Date");
@@ -369,6 +381,12 @@ namespace AmazeCare.Server.Migrations
 
             modelBuilder.Entity("AmazeCare.Server.Models.Appointment", b =>
                 {
+                    b.HasOne("AmazeCare.Server.Models.User", "BookedByUser")
+                        .WithMany()
+                        .HasForeignKey("BookedByUserUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AmazeCare.Server.Models.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
@@ -380,6 +398,8 @@ namespace AmazeCare.Server.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("BookedByUser");
 
                     b.Navigation("Doctor");
 

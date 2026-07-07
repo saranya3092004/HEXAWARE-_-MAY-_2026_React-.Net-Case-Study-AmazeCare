@@ -7,7 +7,7 @@ using AmazeCare.Server.Modules.Auth.DTOs;
 
 namespace AmazeCare.Server.Controller
 {
-    [Route("api/[controller]")]
+    [Route("api/consultations")]
     [ApiController]
     public class ConsultationController : ControllerBase
     {
