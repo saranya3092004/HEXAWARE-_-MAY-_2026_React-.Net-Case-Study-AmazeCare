@@ -22,6 +22,8 @@ namespace AmazeCare.Server.Modules.Auth.Repository.Implementation
         public async Task<User?> GetUserByEmailAsync(string email)=>  //with lambda function
           await _db.Users
             .Include(u=>u.Patients)
+            .Include(u => u.Doctor)
+            .Include(u => u.Admin)
             .FirstOrDefaultAsync(u=> u.Email == email);
         public async Task<User?> GetUserByUserIdAsync(int userId)
         {
@@ -51,12 +53,6 @@ namespace AmazeCare.Server.Modules.Auth.Repository.Implementation
             await _db.SaveChangesAsync();
         }
 
-       
-       //public async Task<Patient?>GetPatientByCodeAndPhoneAsync(string patientCode, string phoneNumber)
-       // {
-       //     return await _db.Patients.FirstOrDefaultAsync(p=>p.PatientCode==patientCode.ToUpper() && p.PhoneNumber==phoneNumber);
-       // }
-
         public async Task<Patient?> GetPatientByUserIdAsync(int userId)
         {
             return await _db.Patients
@@ -80,20 +76,5 @@ namespace AmazeCare.Server.Modules.Auth.Repository.Implementation
             _db.Patients.Update(patient);
             await _db.SaveChangesAsync();
         }
-
-       //public async Task<Doctor?> GetDoctorByCodeAsync(string doctorCode)
-       // {
-       //     return await _db.Doctors.Include(d=>d.User).FirstOrDefaultAsync(d=>d.DoctorCode==doctorCode && d.IsActive);
-       // }
-
-        //public async Task<Admin?> GetAdminByCodeAsync(string adminCode)
-        //{
-        //    return await _db.Admins.Include(a => a.User).FirstOrDefaultAsync(a => a.AdminCode == adminCode && a.IsActive);
-        //}
-
-        //public async Task<LabTechnician?> GetLabTechByCodeAsync(string labTechCode)
-        //{
-        //    return await _db.LabTechnicians.Include(lt => lt.User).FirstOrDefaultAsync(lt => lt.LabTechnicianCode == labTechCode && lt.IsActive);
-        //}
     }
 }

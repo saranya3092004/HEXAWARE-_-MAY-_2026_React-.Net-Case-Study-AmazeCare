@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="amazecare.client/amazecare.client.esproj">
-    <Build />
-    <Deploy />
-  </Project>
-  <Project Path="AmazeCare.Server/AmazeCare.Server.csproj" />
-</Solution>
