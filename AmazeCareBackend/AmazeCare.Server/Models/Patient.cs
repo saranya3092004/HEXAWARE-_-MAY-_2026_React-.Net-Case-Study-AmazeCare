@@ -15,7 +15,7 @@
             public int PatientId { get; set; }
             public int? UserId { get; set; }                           // nullable — admin can add without account
             public string FullName { get; set; } = string.Empty;
-            public DateTime DateOfBirth { get; set; }                  // ← replaces Age (calculate on the fly)
+            public DateTime DateOfBirth { get; set; }                  
             public Gender Gender { get; set; }
             public string PhoneNumber { get; set; } = string.Empty;
             public bool IsActive { get; set; } = true;

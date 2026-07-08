@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 
-// ─── Initial state ────────────────────────────────────────────────────────────
+// ─── Initial state ─────
 const initialState = {
   token: null,
   role: null,
@@ -10,7 +10,7 @@ const initialState = {
   isAuthenticated: false,
 };
 
-// ─── Reducer ──────────────────────────────────────────────────────────────────
+// ─── Reducer ──────
 function authReducer(state, action) {
   switch (action.type) {
     case 'LOGIN':
@@ -30,10 +30,10 @@ function authReducer(state, action) {
   }
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// ─── Context ─────
 const AuthContext = createContext(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+// ─── Provider ────
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState, () => {
     // Rehydrate from localStorage on first load so a page refresh
@@ -56,7 +56,6 @@ export function AuthProvider({ children }) {
         };
       }
     } catch {
-      // localStorage not available (SSR, private mode edge cases)
     }
     return initialState;
   });
@@ -93,7 +92,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// ─── Hook ─────
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');

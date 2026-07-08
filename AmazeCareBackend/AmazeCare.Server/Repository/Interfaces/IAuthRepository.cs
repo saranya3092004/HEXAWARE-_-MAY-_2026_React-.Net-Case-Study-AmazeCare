@@ -14,15 +14,12 @@ namespace AmazeCare.Server.Modules.Auth.Repository.Interface
 
 
 
-        //Task<Patient?> GetPatientByCodeAndPhoneAsync(string patientCode, string phoneNumber);
         Task<Patient?> GetPatientByUserIdAsync(int userId);
         Task<int> GetPatientCountAsync();
         Task<Patient> CreatePatientAsync(Patient patient);
         Task UpdatePatientAsync(Patient patient);
 
 
-        //Task<Doctor?> GetDoctorByCodeAsync(string doctorCode);
-        //Task<Admin?> GetAdminByCodeAsync(string adminCode);
-        //Task<LabTechnician?> GetLabTechByCodeAsync(string labTechCode);
+
     }
 }

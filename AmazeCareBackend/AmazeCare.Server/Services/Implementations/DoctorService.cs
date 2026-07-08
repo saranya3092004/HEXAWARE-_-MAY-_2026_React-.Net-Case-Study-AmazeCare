@@ -1,4 +1,5 @@
 ﻿using AmazeCare.Server.Models;
+using AmazeCare.Server.Modules.Auth.Repository.Interface;
 using AmazeCare.Server.Modules.DoctorModule.DTOs;
 using AmazeCare.Server.Modules.DoctorModule.Repository;
 using AmazeCare.Server.Modules.Middlewares;
@@ -8,11 +9,13 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
     public class DoctorService : IDoctorService
     {
         private readonly IDoctorRepository _doctorRepository;
+        private readonly IAuthRepository _authRepository;
         private readonly ILogger<DoctorService> _logger;
 
-        public DoctorService(IDoctorRepository doctorRepository, ILogger<DoctorService> logger)
+        public DoctorService(IDoctorRepository doctorRepository, IAuthRepository authRepository, ILogger<DoctorService> logger)
         {
             _doctorRepository = doctorRepository;
+            _authRepository = authRepository;
             _logger = logger;
         }
 
@@ -86,9 +89,11 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
                 return appointments.Select(a => new AppointmentSummary
                 {
                     AppointmentId = a.AppointmentId,
+                    DoctorId = a.DoctorId,
                     PatientName = a.Patient.FullName,
                     AppointmentDate = a.AppointmentDate,
                     TimeSlot = a.TimeSlot,
+                    Reason=a.Reason,
                     Status = a.Status.ToString()
                 }).ToList();
             }
@@ -218,7 +223,15 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
                 doctor.IsActive = false;
                 await _doctorRepository.UpdateAsync(doctor);
 
-                _logger.LogInformation("DeactivateDoctor succeeded: DoctorId {DoctorId}.", doctorId);
+                // Also deactivate the linked User account so login is blocked too
+                var user = await _authRepository.GetUserByUserIdAsync(doctor.UserId);
+                if (user != null)
+                {
+                    user.IsActive = false;
+                    await _authRepository.UpdateUserAsync(user);
+                }
+
+                _logger.LogInformation("DeactivateDoctor succeeded: DoctorId {DoctorId}, UserId {UserId}.", doctorId, doctor.UserId);
             }
             catch (AppException)
             {
@@ -229,6 +242,11 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
                 _logger.LogError(ex, "Unexpected error in DeactivateDoctorAsync for DoctorId {DoctorId}.", doctorId);
                 throw;
             }
+        }
+
+        public async Task<List<string>> GetSpecializationsAsync()
+        {
+            return await _doctorRepository.GetDistinctSpecializationsAsync();
         }
 
         internal static DoctorResponse MapToResponse(Doctor doctor)

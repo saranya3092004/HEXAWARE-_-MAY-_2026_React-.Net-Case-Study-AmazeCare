@@ -44,21 +44,5 @@ namespace AmazeCare.Server.Modules.Auth.Controllers
            
         }
 
-
-        [HttpPut("change-password")]
-        [Authorize(Roles = "User,Doctor,Admin,LabTechnician")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized(ApiResponse.Fail("Invalid token."));
-            }
-
-           
-                await _authService.ChangePasswordAsync(userId, request);
-                return Ok(ApiResponse.OK("Password changed successfully."));
-          
-        }
     }
 }

@@ -15,8 +15,11 @@ export const cancelAppointment = (id, payload) =>
 export const rescheduleAppointment = (id, payload) =>
   apiClient.put(`/appointments/${id}/reschedule`, payload);
 
-export const getAvailableSlots = (doctorId, date) =>
-  apiClient.get(`/appointments/slots`, { params: { doctorId, date } });
+export const getAvailableSlots = (doctorId, date, excludeAppointmentId = null) => {
+  const params = { doctorId, date };
+  if (excludeAppointmentId) params.excludeAppointmentId = excludeAppointmentId;
+  return apiClient.get('/appointments/slots', { params });
+};
 
 export const confirmAppointment = (id) =>
   apiClient.put(`/appointments/${id}/confirm`);

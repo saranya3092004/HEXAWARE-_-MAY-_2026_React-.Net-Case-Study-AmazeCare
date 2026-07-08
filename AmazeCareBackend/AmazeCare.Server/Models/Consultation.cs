@@ -8,9 +8,9 @@
             public int DoctorId { get; set; }
 
             // Spec-required capture fields
-            public string CurrentSymptoms { get; set; } = string.Empty;     // field 1
-            public string? PhysicalExamination { get; set; }                // field 2 — vital signs, appearance
-            public string? TreatmentPlan { get; set; }                      // field 3 — recommended tests
+            public string CurrentSymptoms { get; set; } = string.Empty;    
+            public string? PhysicalExamination { get; set; }                
+            public string? TreatmentPlan { get; set; }                     
 
             public string? Diagnosis { get; set; }
             public DateTime ConsultationDate { get; set; } = DateTime.UtcNow;

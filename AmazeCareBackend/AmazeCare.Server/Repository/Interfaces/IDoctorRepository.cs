@@ -6,7 +6,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
     {
         Task<List<Doctor>> SearchAsync(string? name, string? specialization);
         Task<Doctor?> GetByIdAsync(int doctorId);
-        Task<Doctor?> GetByIdWithProfileAsync(int doctorId); // includes Specializations + Availabilities
+        Task<Doctor?> GetByIdWithProfileAsync(int doctorId); 
         Task<Doctor> AddAsync(Doctor doctor);
         Task UpdateAsync(Doctor doctor);
 
@@ -14,7 +14,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
         Task<bool> UserEmailExistsAsync(string email);
         Task<bool> UserPhoneExistsAsync(string phoneNumber);
 
-        // ---- Appointment (read/update needed for slot calc + cascade reassignment) ----
         Task<List<Appointment>> GetAppointmentsForDoctorAsync(int doctorId, bool upcomingOnly);
+        Task<List<string>> GetDistinctSpecializationsAsync();
     }
 }

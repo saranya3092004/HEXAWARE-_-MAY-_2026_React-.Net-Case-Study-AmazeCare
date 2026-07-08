@@ -19,7 +19,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
             _patientService = patientService;
         }
 
-        // GET /api/v1/patients — User sees own profile, Admin sees all
+        // GET /api/patients — User sees own profile, Admin sees all
         [HttpGet]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> GetPatients([FromQuery] string? searchTerm = null, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false)
@@ -29,7 +29,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
             return Ok(ApiResponse<List<PatientResponse>>.OK(result));
         }
 
-        // GET /api/v1/patients/{id}
+        // GET /api/patients/{id}
         [HttpGet("{id}")]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetById(int id)
@@ -39,7 +39,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
             return Ok(ApiResponse<PatientResponse>.OK(result));
         }
 
-        // GET /api/v1/patients/{id}/history
+        // GET /api/patients/{id}/history
         [HttpGet("{id}/history")]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetHistory(int id)
@@ -50,7 +50,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
             return Ok(ApiResponse<PatientHistoryResponse>.OK(result));
         }
 
-        // POST /api/v1/patients — Admin registers walk-in patient
+        // POST /api/patients — Admin registers walk-in patient
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterWalkInPatient([FromBody] RegisterWalkInPatientRequest request)
@@ -61,7 +61,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
 
 
 
-        // PUT /api/v1/patients/{id} — User (own family) or Admin (any)
+        // PUT /api/patients/{id} — User (own family) or Admin (any)
         [HttpPut("{id}")]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdatePatientRequest request)
@@ -71,7 +71,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Controllers
             return Ok(ApiResponse<PatientResponse>.OK(result, "Patient updated successfully."));
         }
 
-        // DELETE /api/v1/patients/{id} — Admin only, soft delete
+        // DELETE /api/patients/{id} — Admin only, soft delete
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(int id)

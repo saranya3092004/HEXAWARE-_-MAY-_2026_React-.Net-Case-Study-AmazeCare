@@ -20,9 +20,6 @@ namespace AmazeCare.Server.Modules.PatientModule.Validators
             RuleFor(x => x.Gender)
                 .IsInEnum().WithMessage("Invalid gender value.");
 
-            //RuleFor(x => x.BloodGroup)
-            //    .IsInEnum().WithMessage("Invalid blood group value.");
-
             RuleFor(x => x.Address)
                 .MaximumLength(300).WithMessage("Address cannot exceed 300 characters.");
         }

@@ -131,48 +131,6 @@ namespace AmazeCare.Server.Modules.Auth.Services.Implementation
             }
         }
 
-        public async Task ChangePasswordAsync(int userId, ChangePasswordRequest request)
-        {
-            try
-            {
-                if (request.NewPassword != request.ConfirmNewPassword)
-                {
-                    _logger.LogWarning("ChangePassword failed: confirmation mismatch for UserId {UserId}.", userId);
-                    throw new BadRequestException("New password and confirmation do not match.");
-                }
-
-                var user = await _authRepository.GetUserByUserIdAsync(userId);
-                if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-                {
-                    _logger.LogError("ChangePassword failed: UserId {UserId} not found.", userId);
-                    throw new NotFoundException("User not found.");
-                }
-
-                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
-                {
-                    _logger.LogWarning("ChangePassword failed: incorrect current password for UserId {UserId}.", userId);
-                    throw new UnauthorizedAccessException("Current password is incorrect.");
-                }
-
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-                await _authRepository.UpdateUserAsync(user);
-
-                _logger.LogInformation("ChangePassword succeeded for UserId {UserId}.", userId);
-            }
-            catch (AppException)
-            {
-                throw;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error during ChangePassword for UserId {UserId}.", userId);
-                throw;
-            }
-        }
 
         private async Task<LoginResponse> BuildLoginResponseAsync(User user)
         {

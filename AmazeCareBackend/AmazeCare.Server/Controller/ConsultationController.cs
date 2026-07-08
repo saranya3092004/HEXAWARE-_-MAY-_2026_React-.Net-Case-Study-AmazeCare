@@ -18,7 +18,7 @@ namespace AmazeCare.Server.Controller
             _consultationService = consultationService;
         }
 
-        // GET /api/v1/consultations — Doctor sees own, Patient sees own, Admin sees all
+        // GET /api/consultations — Doctor sees own, Patient sees own, Admin sees all
         [HttpGet]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetConsultations()
@@ -28,7 +28,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<List<ConsultationResponse>>.OK(result));
         }
 
-        // GET /api/v1/consultations/{id}
+        // GET /api/consultations/{id}
         [HttpGet("{id}")]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetById(int id)
@@ -38,7 +38,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<ConsultationResponse>.OK(result));
         }
 
-        // POST /api/v1/consultations — Doctor creates consultation for a confirmed appointment
+        // POST /api/consultations — Doctor creates consultation for a confirmed appointment
         [HttpPost]
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Create([FromBody] CreateConsultationRequest request)
@@ -48,7 +48,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<ConsultationResponse>.Created(result, "Consultation recorded successfully."));
         }
 
-        // PUT /api/v1/consultations/{id} — Doctor updates symptoms, examination, diagnosis, treatment plan
+        // PUT /api/consultations/{id} — Doctor updates symptoms, examination, diagnosis, treatment plan
         [HttpPut("{id}")]
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateConsultationRequest request)

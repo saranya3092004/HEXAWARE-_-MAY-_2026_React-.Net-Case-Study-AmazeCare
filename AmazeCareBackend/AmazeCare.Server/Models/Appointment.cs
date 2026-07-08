@@ -16,7 +16,6 @@
         FollowUp,
         SpecificIssue,
         Emergency,
-        LabTestOnly
     }
 
     public class Appointment

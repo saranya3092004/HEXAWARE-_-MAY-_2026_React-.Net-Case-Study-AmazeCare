@@ -3,7 +3,7 @@
 namespace AmazeCare.Server.Modules.Auth.DTOs
 {
 
-    public class RegisterPatientRequest // to Regsiter the User the Role is Assigned Later whether User OR Patient
+    public class RegisterPatientRequest 
     {
         public string FullName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;

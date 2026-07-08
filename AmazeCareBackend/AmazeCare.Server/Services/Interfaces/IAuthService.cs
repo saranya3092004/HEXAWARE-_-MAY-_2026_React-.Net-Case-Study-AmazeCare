@@ -7,6 +7,5 @@ namespace AmazeCare.Server.Modules.Auth.Services.Interface
     {
         Task<LoginResponse> EmailLoginAsync(EmailLoginRequest request);
         Task<LoginResponse> RegisterPatientAsync(RegisterPatientRequest request);
-        Task ChangePasswordAsync(int userId, ChangePasswordRequest request);
     }
 }

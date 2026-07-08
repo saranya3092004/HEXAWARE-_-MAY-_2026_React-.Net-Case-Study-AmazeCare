@@ -19,7 +19,7 @@ namespace AmazeCare.Server.Controller
             _appointmentService = appointmentService;
         }
 
-        // GET /api/v1/appointments — filtered by role, status, date range
+        // GET /api/appointments — filtered by role, status, date range
         [HttpGet]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetAppointments([FromQuery] AppointmentFilterRequest filter)
@@ -29,7 +29,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<List<AppointmentResponse>>.OK(result));
         }
 
-        // GET /api/v1/appointments/{id}
+        // GET /api/appointments/{id}
         [HttpGet("{id}")]
         [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> GetById(int id)
@@ -39,7 +39,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result));
         }
 
-        // POST /api/v1/appointments — books for self (User) or on behalf of a patient (Admin)
+        // POST /api/appointments — books for self (User) or on behalf of a patient (Admin)
         [HttpPost]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> Book([FromBody] CreateAppointmentRequest request)
@@ -49,7 +49,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.Created(result, "Appointment booked successfully."));
         }
 
-        // PUT /api/v1/appointments/{id}/confirm
+        // PUT /api/appointments/{id}/confirm
         [HttpPut("{id}/confirm")]
         [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> Confirm(int id)
@@ -59,7 +59,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment confirmed successfully."));
         }
 
-        // PUT /api/v1/appointments/{id}/reject
+        // PUT /api/appointments/{id}/reject
         [HttpPut("{id}/reject")]
         [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> Reject(int id, [FromBody] RejectAppointmentRequest request)
@@ -69,7 +69,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment rejected successfully."));
         }
 
-        // PUT /api/v1/appointments/{id}/cancel
+        // PUT /api/appointments/{id}/cancel
         [HttpPut("{id}/cancel")]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> Cancel(int id, [FromBody] CancelAppointmentRequest request)
@@ -89,7 +89,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment rescheduled successfully."));
         }
 
-        // PUT /api/v1/appointments/{id}/complete
+        // PUT /api/appointments/{id}/complete
         [HttpPut("{id}/complete")]
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> Complete(int id)
@@ -99,13 +99,16 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment marked as completed."));
         }
 
-        // GET /api/appointments/available-slots?doctorId=5&date=2026-07-10
-        [HttpGet("available-slots")]
-        [Authorize(Roles = "User,Doctor,Admin")]
-        public async Task<IActionResult> GetAvailableSlots([FromQuery] int doctorId, [FromQuery] DateTime date)
+        // GET /api/appointments/slots?doctorId=1&date=2026-07-10&excludeAppointmentId=5
+        [HttpGet("slots")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvailableSlots(
+            [FromQuery] int doctorId,
+            [FromQuery] DateTime date,
+            [FromQuery] int? excludeAppointmentId = null)
         {
-            var result = await _appointmentService.GetAvailableSlotsAsync(doctorId, date);
-            return Ok(ApiResponse<List<string>>.OK(result));
+            var slots = await _appointmentService.GetAvailableSlotsAsync(doctorId, date, excludeAppointmentId);
+            return Ok(ApiResponse<List<string>>.OK(slots));
         }
 
         // Reads role-specific profile id (PatientId/DoctorId/AdminId) from the JWT claims
@@ -121,7 +124,7 @@ namespace AmazeCare.Server.Controller
             else if (isAdmin)
                 int.TryParse(User.FindFirstValue("AdminId"), out callerId);
             else
-                int.TryParse(User.FindFirstValue("UserId"), out callerId);   // was "PatientId"
+                int.TryParse(User.FindFirstValue("UserId"), out callerId);   // it is "PatientId"
 
             return (callerId, isAdmin, isDoctor);
         }

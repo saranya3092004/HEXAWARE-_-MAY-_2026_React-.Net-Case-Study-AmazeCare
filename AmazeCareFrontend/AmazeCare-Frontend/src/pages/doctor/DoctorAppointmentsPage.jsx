@@ -182,15 +182,22 @@ export default function DoctorAppointmentsPage() {
                         </>
                       )}
 
-                      {/* ── Rescheduled (by doctor): still show Reschedule option ── */}
-                      {a.status === 'Rescheduled' && (
-                        <button
-                          className="btn-sm btn-sm--outline"
-                          onClick={() => setRescheduleTarget(a)}
-                        >
-                          Reschedule again
-                        </button>
-                      )}
+                    {/* ── Rescheduled: Confirm / Reject the new time, or reschedule again ── */}
+{a.status === 'Rescheduled' && (
+  <>
+    <button className="btn-sm btn-sm--confirm" onClick={() => handleConfirm(a.appointmentId)}>
+      Confirm
+    </button>
+    <button className="btn-sm btn-sm--danger" onClick={() => handleReject(a.appointmentId)}>
+      Reject
+    </button>
+   <button
+  className="btn-sm btn-sm--outline"
+onClick={() => setRescheduleTarget({ ...a, doctorId: a.doctorId ?? roleSpecificId })}>
+  Reschedule
+</button>
+  </>
+)}
 
                     </div>
                   </td>
@@ -239,16 +246,13 @@ export default function DoctorAppointmentsPage() {
       </div>
 
       {/* ── Reschedule modal ──────────────────────────────────── */}
-      {rescheduleTarget && (
-        <RescheduleModal
-          appointment={rescheduleTarget}
-          onClose={() => setRescheduleTarget(null)}
-          onSuccess={() => {
-            setRescheduleTarget(null);
-            load();
-          }}
-        />
-      )}
+       {rescheduleTarget && (
+              <RescheduleModal
+                appointment={rescheduleTarget}
+                onClose={() => setRescheduleTarget(null)}
+                onSuccess={() => { setRescheduleTarget(null); load(); }}
+              />
+            )}
     </DoctorLayout>
   );
 }

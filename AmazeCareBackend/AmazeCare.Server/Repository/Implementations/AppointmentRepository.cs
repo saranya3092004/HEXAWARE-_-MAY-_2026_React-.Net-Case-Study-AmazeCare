@@ -66,15 +66,22 @@ namespace AmazeCare.Server.Repository.Implementations
             _context.Appointments.Update(appointment);
             await _context.SaveChangesAsync();
         }
-        public async Task<List<string>> GetBookedSlotsAsync(int doctorId, DateTime date)
+        public async Task<HashSet<string>> GetBookedSlotsAsync(int doctorId, DateTime date, int? excludeAppointmentId = null)
         {
-            return await _context.Appointments
-                .Where(a => a.DoctorId == doctorId
-                         && a.AppointmentDate.Date == date.Date
-                         && a.Status != AppointmentStatus.Cancelled
-                         && a.Status != AppointmentStatus.Rejected)
-                .Select(a => a.TimeSlot)
-                .ToListAsync();
+            var query = _context.Appointments
+                .Where(a =>
+                    a.DoctorId == doctorId &&
+                    a.AppointmentDate.Date == date.Date &&
+                    a.Status != AppointmentStatus.Cancelled &&
+                    a.Status != AppointmentStatus.Rejected);
+
+            // Exclude the appointment being rescheduled so its own
+            // slot doesn't appear as taken in the available slots list
+            if (excludeAppointmentId.HasValue)
+                query = query.Where(a => a.AppointmentId != excludeAppointmentId.Value);
+
+            var slots = await query.Select(a => a.TimeSlot).ToListAsync();
+            return slots.ToHashSet();
         }
     }
 }

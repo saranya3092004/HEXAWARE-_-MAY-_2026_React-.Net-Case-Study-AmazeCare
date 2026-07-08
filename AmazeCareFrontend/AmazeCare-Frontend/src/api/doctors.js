@@ -9,6 +9,9 @@ export const getDoctorById = (id) =>
 export const getDoctorAppointments = (id, params) =>
   apiClient.get(`/doctors/${id}/appointments`, { params });
 
+export const getSpecializations = () =>
+  apiClient.get('/doctors/specializations');
+
 export const createDoctor = (payload) =>
   apiClient.post('/doctors', payload);
 

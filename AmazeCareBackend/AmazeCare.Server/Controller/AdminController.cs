@@ -18,7 +18,7 @@ namespace AmazeCare.Server.Modules.AdminModule.Controllers
             _adminService = adminService;
         }
 
-        // GET /api/v1/admin/dashboard — total patients, doctors, today's appointments, pending appointments
+        // GET /api/admin/dashboard — total patients, doctors, today's appointments, pending appointments
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
@@ -26,7 +26,7 @@ namespace AmazeCare.Server.Modules.AdminModule.Controllers
             return Ok(ApiResponse<AdminDashboardResponse>.OK(result));
         }
 
-        // GET /api/v1/admin/reports/appointments — filter by date range, doctor, status (list view)
+        // GET /api/admin/reports/appointments — filter by date range, doctor, status (list view)
         [HttpGet("reports/appointments")]
         public async Task<IActionResult> GetAppointmentReport([FromQuery] AppointmentReportRequest request)
         {
@@ -34,7 +34,7 @@ namespace AmazeCare.Server.Modules.AdminModule.Controllers
             return Ok(ApiResponse<List<AppointmentReportItem>>.OK(result));
         }
 
-        // GET /api/v1/admin/reports/patients — new patients per period
+        // GET /api/admin/reports/patients — new patients per period
         [HttpGet("reports/patients")]
         public async Task<IActionResult> GetPatientReport([FromQuery] PatientReportRequest request)
         {

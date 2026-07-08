@@ -209,11 +209,11 @@ namespace AmazeCare.Server.Services.Implementations
                     throw new ForbiddenException("You are not authorized to confirm this appointment.");
                 }
 
-                if (appointment.Status != AppointmentStatus.Pending)
+                if (appointment.Status != AppointmentStatus.Pending && appointment.Status != AppointmentStatus.Rescheduled)
                 {
                     _logger.LogWarning("ConfirmAppointment failed: AppointmentId {AppointmentId} is {Status}, expected Pending.",
                         appointmentId, appointment.Status);
-                    throw new ConflictException($"Only pending appointments can be confirmed. Current status: {appointment.Status}.");
+                    throw new ConflictException($"Only pending or rescheduled appointments can be confirmed. Current status: {appointment.Status}.");
                 }
 
                 appointment.Status = AppointmentStatus.Confirmed;
@@ -252,11 +252,11 @@ namespace AmazeCare.Server.Services.Implementations
                     throw new ForbiddenException("You are not authorized to reject this appointment.");
                 }
 
-                if (appointment.Status != AppointmentStatus.Pending)
+                if (appointment.Status != AppointmentStatus.Pending && appointment.Status != AppointmentStatus.Rescheduled)
                 {
                     _logger.LogWarning("RejectAppointment failed: AppointmentId {AppointmentId} is {Status}, expected Pending.",
                         appointmentId, appointment.Status);
-                    throw new ConflictException($"Only pending appointments can be rejected. Current status: {appointment.Status}.");
+                    throw new ConflictException($"Only pending or rescheduled appointments can be rejected. Current status: {appointment.Status}.");
                 }
 
                 appointment.Status = AppointmentStatus.Rejected;
@@ -478,17 +478,16 @@ namespace AmazeCare.Server.Services.Implementations
             return true;
         }
 
-        public async Task<List<string>> GetAvailableSlotsAsync(int doctorId, DateTime date)
+        public async Task<List<string>> GetAvailableSlotsAsync(int doctorId, DateTime date, int? excludeAppointmentId = null)
         {
-            var bookedSlots = await _appointmentRepository.GetBookedSlotsAsync(doctorId, date);
+            var bookedSlots = await _appointmentRepository.GetBookedSlotsAsync(doctorId, date, excludeAppointmentId);
             var allSlots = new List<string>();
 
             var cursor = WorkStart;
             while (cursor + SlotDuration <= WorkEnd)
             {
                 var slotEnd = cursor + SlotDuration;
-                var label = $"{cursor:hh\\:mm}-{slotEnd:hh\\:mm}";
-                allSlots.Add(label);
+                allSlots.Add($"{cursor:hh\\:mm}-{slotEnd:hh\\:mm}");
                 cursor = slotEnd;
             }
 
@@ -500,7 +499,6 @@ namespace AmazeCare.Server.Services.Implementations
                 .Where(s => !isToday || (date.Date + TimeSpan.Parse(s.Split('-')[0])) > earliestBookable)
                 .ToList();
         }
-
         private static AppointmentResponse MapToResponse(Appointment appointment)
         {
             return new AppointmentResponse

@@ -1,14 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchDoctors } from '../../api/doctors';
+import { searchDoctors, getSpecializations } from '../../api/doctors';
 import { bookAppointment, getAvailableSlots } from '../../api/appointments';
 import PatientLayout from '../../layouts/PatientLayout';
 import FormField from '../../components/FormField';
 import '../../components/forms.css';
 import { isUserFacingError, GENERIC_ERROR } from '../../utils/errors';
 
-
-// Add these two near the top, inside the component (or as module-level constants)
 const today = new Date();
 const maxBookableDate = new Date();
 maxBookableDate.setDate(today.getDate() + 7);
@@ -29,7 +27,10 @@ export default function BookAppointmentPage() {
   const [search, setSearch] = useState({ name: '', specialty: '' });
   const [doctors, setDoctors] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+
+  const [specializations, setSpecializations] = useState([]);
 
   const [form, setForm] = useState({
     appointmentDate: '',
@@ -44,79 +45,99 @@ export default function BookAppointmentPage() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
+  useEffect(() => {
+    async function loadSpecializations() {
+      try {
+        const { data } = await getSpecializations();
+        setSpecializations(data.data ?? []);
+      } catch {
+        setSpecializations([]);
+      }
+    }
+    loadSpecializations();
+  }, []);
+
   const handleSearch = useCallback(async () => {
     setSearchLoading(true);
+    setSearchError('');
     try {
       const { data } = await searchDoctors({
         name: search.name || undefined,
-        specialty: search.specialty || undefined,
+        specialization: search.specialty || undefined,
       });
       setDoctors(data.data ?? []);
     } catch (err) {
-  if (isUserFacingError(err)) {
-    setDoctors([]);
-  } else {
-    console.error('Doctor search error:', err);
-  }
-  setDoctors([]);
-} finally {
+      if (isUserFacingError(err)) {
+        setSearchError(err.message);
+      } else {
+        console.error('Doctor search error:', err);
+        setSearchError(GENERIC_ERROR);
+      }
+      setDoctors([]);
+    } finally {
       setSearchLoading(false);
     }
   }, [search]);
 
   useEffect(() => { handleSearch(); }, []);
 
-useEffect(() => {
-  async function loadSlots() {
-    if (!selectedDoctor || !form.appointmentDate) {
-      setAvailableSlots([]);
-      return;
-    }
-    setSlotsLoading(true);
-    try {
-      const { data } = await getAvailableSlots(selectedDoctor.doctorId, form.appointmentDate);
-      setAvailableSlots(data.data ?? []);
-    } catch (err) {
-      if (isUserFacingError(err)) {
-        setServerError(err.message);
-      } else {
-        console.error('Get available slots error:', err);
-        setServerError(GENERIC_ERROR);
+  useEffect(() => {
+    async function loadSlots() {
+      if (!selectedDoctor || !form.appointmentDate) {
+        setAvailableSlots([]);
+        return;
       }
-      setAvailableSlots([]);
-    } finally {
-      setSlotsLoading(false);
+      setSlotsLoading(true);
+      try {
+        const { data } = await getAvailableSlots(selectedDoctor.doctorId, form.appointmentDate);
+        setAvailableSlots(data.data ?? []);
+      } catch (err) {
+        if (isUserFacingError(err)) {
+          setServerError(err.message);
+        } else {
+          console.error('Get available slots error:', err);
+          setServerError(GENERIC_ERROR);
+        }
+        setAvailableSlots([]);
+      } finally {
+        setSlotsLoading(false);
+      }
     }
-  }
-  loadSlots();
-}, [selectedDoctor, form.appointmentDate]);
+    loadSlots();
+  }, [selectedDoctor, form.appointmentDate]);
 
- function validate() {
-  const next = {};
-  if (!selectedDoctor) next.doctor = 'Select a doctor.';
+  function validate() {
+    const next = {};
+    if (!selectedDoctor) next.doctor = 'Select a doctor.';
 
-  if (!form.appointmentDate) {
-    next.appointmentDate = 'Choose a date.';
-  } else {
-    const selected = new Date(form.appointmentDate);
-    selected.setHours(0, 0, 0, 0);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const maxStart = new Date(todayStart);
-    maxStart.setDate(todayStart.getDate() + 7);
+    if (!form.appointmentDate) {
+      next.appointmentDate = 'Choose a date.';
+    } else {
+      const selected = new Date(form.appointmentDate);
+      selected.setHours(0, 0, 0, 0);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const maxStart = new Date(todayStart);
+      maxStart.setDate(todayStart.getDate() + 7);
 
-    if (selected < todayStart) {
-      next.appointmentDate = 'Date cannot be in the past.';
-    } else if (selected > maxStart) {
-      next.appointmentDate = 'Appointments can only be booked up to 7 days in advance.';
+      if (selected < todayStart) {
+        next.appointmentDate = 'Date cannot be in the past.';
+      } else if (selected > maxStart) {
+        next.appointmentDate = 'Appointments can only be booked up to 7 days in advance.';
+      }
     }
-  }
 
-  if (!form.timeSlot.trim()) next.timeSlot = 'Select a time slot.';
-  if (!form.reason.trim()) next.reason = 'Briefly describe your symptoms or concern.';
-  setErrors(next);
-  return Object.keys(next).length === 0;
-}
+    if (!form.timeSlot.trim()) next.timeSlot = 'Select a time slot.';
+
+    if (!form.reason.trim()) {
+      next.reason = 'Briefly describe your symptoms or concern.';
+    } else if (form.reason.trim().length < 10) {
+      next.reason = 'Please provide a bit more detail (at least 10 characters).';
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   async function handleBook(e) {
     e.preventDefault();
@@ -133,13 +154,13 @@ useEffect(() => {
       });
       navigate('/patient/appointments');
     } catch (err) {
-  if (isUserFacingError(err)) {
-    setServerError(err.message);
-  } else {
-    console.error('Book appointment error:', err);
-    setServerError(GENERIC_ERROR);
-  }
-} finally {
+      if (isUserFacingError(err)) {
+        setServerError(err.message);
+      } else {
+        console.error('Book appointment error:', err);
+        setServerError(GENERIC_ERROR);
+      }
+    } finally {
       setSubmitting(false);
     }
   }
@@ -164,13 +185,16 @@ useEffect(() => {
             />
           </FormField>
           <FormField label="Specialty" error={null}>
-            <input
-              type="text"
+            <select
               className="form-input"
-              placeholder="e.g. Cardiology"
               value={search.specialty}
               onChange={(e) => setSearch({ ...search, specialty: e.target.value })}
-            />
+            >
+              <option value="">All specialties</option>
+              {specializations.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </FormField>
           <button
             type="button"
@@ -184,8 +208,9 @@ useEffect(() => {
         </div>
 
         {errors.doctor && <p className="form-error">{errors.doctor}</p>}
+        {searchError && <div className="form-banner-error" style={{ marginTop: '0.75rem' }}>{searchError}</div>}
 
-        {doctors.length === 0 && !searchLoading ? (
+        {doctors.length === 0 && !searchLoading && !searchError ? (
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
             No doctors found. Try different search terms.
           </p>
@@ -219,15 +244,15 @@ useEffect(() => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
               <FormField label="Preferred date" error={errors.appointmentDate}>
-  <input
-    type="date"
-    className={`form-input ${errors.appointmentDate ? 'has-error' : ''}`}
-    value={form.appointmentDate}
-    onChange={(e) => setForm({ ...form, appointmentDate: e.target.value, timeSlot: '' })}
-    min={minDateStr}
-    max={maxDateStr}
-  />
-</FormField>
+                <input
+                  type="date"
+                  className={`form-input ${errors.appointmentDate ? 'has-error' : ''}`}
+                  value={form.appointmentDate}
+                  onChange={(e) => setForm({ ...form, appointmentDate: e.target.value, timeSlot: '' })}
+                  min={minDateStr}
+                  max={maxDateStr}
+                />
+              </FormField>
 
               <FormField label="Preferred time slot" error={errors.timeSlot}>
                 <select

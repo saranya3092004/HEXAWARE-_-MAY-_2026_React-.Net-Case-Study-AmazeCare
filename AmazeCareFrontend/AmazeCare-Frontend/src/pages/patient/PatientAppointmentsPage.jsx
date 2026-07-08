@@ -5,17 +5,24 @@ import PatientLayout from '../../layouts/PatientLayout';
 import RescheduleModal from '../../components/patient/RescheduleModal';
 import { isUserFacingError, GENERIC_ERROR } from '../../utils/errors';
 
-
 function StatusBadge({ status }) {
   return (
     <span className={`badge badge--${status.toLowerCase()}`}>{status}</span>
   );
 }
 
+const TABS = [
+  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'cancelledOrRejected', label: 'Cancelled / Rejected' },
+];
+
 export default function PatientAppointmentsPage() {
   const { roleSpecificId } = useAuth();
   const [upcoming, setUpcoming] = useState([]);
   const [completed, setCompleted] = useState([]);
+  const [cancelledOrRejected, setCancelledOrRejected] = useState([]);
+  const [activeTab, setActiveTab] = useState('upcoming');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
@@ -36,14 +43,15 @@ export default function PatientAppointmentsPage() {
         )
       );
       setCompleted(all.filter((a) => a.status === 'Completed'));
-    }  catch (err) {
-  if (isUserFacingError(err)) {
-    setError(err.message);
-  } else {
-    console.error('Load appointments error:', err);
-    setError(GENERIC_ERROR);
-  }
-} finally {
+      setCancelledOrRejected(all.filter((a) => ['Cancelled', 'Rejected'].includes(a.status)));
+    } catch (err) {
+      if (isUserFacingError(err)) {
+        setError(err.message);
+      } else {
+        console.error('Load appointments error:', err);
+        setError(GENERIC_ERROR);
+      }
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -58,16 +66,21 @@ export default function PatientAppointmentsPage() {
       await cancelAppointment(id, { reason });
       load();
     } catch (err) {
-  if (isUserFacingError(err)) {
-    setActionError(err.message);
-  } else {
-    console.error('Cancel appointment error:', err);
-    setActionError(GENERIC_ERROR);
-  }
-}
+      if (isUserFacingError(err)) {
+        setActionError(err.message);
+      } else {
+        console.error('Cancel appointment error:', err);
+        setActionError(GENERIC_ERROR);
+      }
+    }
   }
 
   if (loading) return <PatientLayout><div className="spinner">Loading appointments…</div></PatientLayout>;
+
+  const activeList =
+    activeTab === 'upcoming' ? upcoming :
+    activeTab === 'completed' ? completed :
+    cancelledOrRejected;
 
   return (
     <PatientLayout>
@@ -82,61 +95,28 @@ export default function PatientAppointmentsPage() {
         </div>
       )}
 
-      {/* ── Upcoming ── */}
-      <h2 className="section-label">Upcoming</h2>
-      <div className="data-table-wrap" style={{ marginBottom: '2.5rem' }}>
-        {upcoming.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-state-title">No upcoming appointments</p>
-            <p>Book a new appointment to get started.</p>
-          </div>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Doctor</th>
-                <th>Date</th>
-                <th>Time slot</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcoming.map((a) => (
-                <tr key={a.appointmentId}>
-                  <td>{a.doctorName}</td>
-                  <td>{new Date(a.appointmentDate).toLocaleDateString('en-IN')}</td>
-                  <td>{a.timeSlot}</td>
-                  <td>{a.reason ?? '—'}</td>
-                  <td><StatusBadge status={a.status} /></td>
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      className="btn-sm btn-sm--outline"
-                      onClick={() => setRescheduleTarget(a)}
-                    >
-                      Reschedule
-                    </button>
-                    <button
-                      className="btn-sm btn-sm--danger"
-                      onClick={() => handleCancel(a.appointmentId)}
-                    >
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            className={activeTab === tab.key ? 'btn-sm btn-sm--confirm' : 'btn-sm btn-sm--outline'}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* ── Completed ── */}
-      <h2 className="section-label">Completed consultations</h2>
       <div className="data-table-wrap">
-        {completed.length === 0 ? (
+        {activeList.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-state-title">No completed appointments yet</p>
+            <p className="empty-state-title">
+              {activeTab === 'upcoming' && 'No upcoming appointments'}
+              {activeTab === 'completed' && 'No completed appointments yet'}
+              {activeTab === 'cancelledOrRejected' && 'Nothing here'}
+            </p>
+            {activeTab === 'upcoming' && <p>Book a new appointment to get started.</p>}
           </div>
         ) : (
           <table className="data-table">
@@ -147,16 +127,31 @@ export default function PatientAppointmentsPage() {
                 <th>Time slot</th>
                 <th>Reason</th>
                 <th>Status</th>
+                {activeTab === 'upcoming' && <th>Actions</th>}
+                {activeTab === 'cancelledOrRejected' && <th>Cancellation reason</th>}
               </tr>
             </thead>
             <tbody>
-              {completed.map((a) => (
+              {activeList.map((a) => (
                 <tr key={a.appointmentId}>
                   <td>{a.doctorName}</td>
                   <td>{new Date(a.appointmentDate).toLocaleDateString('en-IN')}</td>
                   <td>{a.timeSlot}</td>
                   <td>{a.reason ?? '—'}</td>
                   <td><StatusBadge status={a.status} /></td>
+                  {activeTab === 'upcoming' && (
+                    <td style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="btn-sm btn-sm--outline" onClick={() => setRescheduleTarget(a)}>
+                        Reschedule
+                      </button>
+                      <button className="btn-sm btn-sm--danger" onClick={() => handleCancel(a.appointmentId)}>
+                        Cancel
+                      </button>
+                    </td>
+                  )}
+                  {activeTab === 'cancelledOrRejected' && (
+                    <td>{a.cancellationReason ?? '—'}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

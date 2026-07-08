@@ -12,6 +12,6 @@ namespace AmazeCare.Server.Services.Interfaces
         Task<AppointmentResponse> CancelAsync(int appointmentId, int callerId, bool isAdmin, CancelAppointmentRequest request);
         Task<AppointmentResponse> RescheduleAsync(int appointmentId, int callerId, bool isAdmin, bool isDoctor, RescheduleAppointmentRequest request);
         Task<AppointmentResponse> CompleteAsync(int appointmentId, int callerId);
-        Task<List<string>> GetAvailableSlotsAsync(int doctorId, DateTime date);
+        Task<List<string>> GetAvailableSlotsAsync(int doctorId, DateTime date, int? excludeAppointmentId = null);
     }
 }

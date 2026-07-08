@@ -10,16 +10,18 @@ namespace AmazeCare.Server.Modules.DoctorModule.Service
         Task<DoctorResponse> CreateDoctorAsync(CreateDoctorRequest request);
         Task<DoctorResponse> UpdateDoctorAsync(int doctorId, UpdateDoctorRequest request);
         Task DeactivateDoctorAsync(int doctorId);
+        Task<List<string>> GetSpecializationsAsync();
     }
 
-    // Used by GetDoctorAppointmentsAsync — kept here rather than a separate file
-    // since it's a small, Doctor-module-local shape, not used by the Appointment module.
+
     public class AppointmentSummary
     {
         public int AppointmentId { get; set; }
+        public int DoctorId { get; set; }
         public string PatientName { get; set; } = string.Empty;
         public DateTime AppointmentDate { get; set; }
         public string TimeSlot { get; set; } = string.Empty;
+        public string? Reason { get; set; }
         public string Status { get; set; } = string.Empty;
     }
 }

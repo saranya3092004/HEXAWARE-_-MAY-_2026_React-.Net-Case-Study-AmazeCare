@@ -28,7 +28,7 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
             if (!string.IsNullOrWhiteSpace(specialization))
             {
                 var term = specialization.Trim().ToLower();
-                query = query.Where(d => d.Specialization.ToLower().Contains(term));
+                query = query.Where(d => d.Specialization.ToLower()==term);
             }
 
             return await query.OrderBy(d => d.Name).ToListAsync();
@@ -90,6 +90,16 @@ namespace AmazeCare.Server.Modules.DoctorModule.Repository
             }
 
             return await query.OrderBy(a => a.AppointmentDate).ThenBy(a => a.TimeSlot).ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctSpecializationsAsync()
+        {
+            return await _context.Doctors
+                .Where(d => !string.IsNullOrEmpty(d.Specialization))
+                .Select(d => d.Specialization)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
         }
     }
 }

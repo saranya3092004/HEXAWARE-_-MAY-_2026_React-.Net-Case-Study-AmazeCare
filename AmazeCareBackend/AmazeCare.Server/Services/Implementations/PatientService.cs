@@ -130,6 +130,7 @@ namespace AmazeCare.Server.Modules.PatientModule.Service
                             ConsultationDate = c.ConsultationDate,
                             DoctorName = c.Doctor?.Name ?? "Unknown",
                             Diagnosis = c.Diagnosis,
+                            TreatmentPlan=c.TreatmentPlan,
                             CurrentSymptoms = c.CurrentSymptoms
                         })
                         .ToList()

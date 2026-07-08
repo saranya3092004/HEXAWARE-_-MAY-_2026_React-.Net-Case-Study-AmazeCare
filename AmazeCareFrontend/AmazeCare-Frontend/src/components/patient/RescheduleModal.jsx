@@ -5,6 +5,12 @@ import '../../components/forms.css';
 import './Modal.css';
 import { isUserFacingError, GENERIC_ERROR } from '../../utils/errors';
 
+const today = new Date();
+const maxBookableDate = new Date();
+maxBookableDate.setDate(today.getDate() + 7);
+
+const minDateStr = today.toISOString().split('T')[0];
+const maxDateStr = maxBookableDate.toISOString().split('T')[0];
 
 export default function RescheduleModal({ appointment, onClose, onSuccess }) {
   const [form, setForm] = useState({ newAppointmentDate: '', newTimeSlot: '' });
@@ -15,8 +21,6 @@ export default function RescheduleModal({ appointment, onClose, onSuccess }) {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
-  // Fetch real availability from the backend, same as the booking flow,
-  // instead of letting the patient free-type a time slot.
   useEffect(() => {
     async function loadSlots() {
       if (!form.newAppointmentDate) {
@@ -25,8 +29,7 @@ export default function RescheduleModal({ appointment, onClose, onSuccess }) {
       }
       setSlotsLoading(true);
       try {
-        const { data } = await getAvailableSlots(appointment.doctorId, form.newAppointmentDate);
-        setAvailableSlots(data.data ?? []);
+const { data } = await getAvailableSlots(appointment.doctorId, form.newAppointmentDate, appointment.appointmentId);      setAvailableSlots(data.data ?? []);
       } catch (err) {
         if (isUserFacingError(err)) {
           setServerError(err.message);
@@ -44,7 +47,24 @@ export default function RescheduleModal({ appointment, onClose, onSuccess }) {
 
   function validate() {
     const next = {};
-    if (!form.newAppointmentDate) next.newAppointmentDate = 'Choose a new date.';
+
+    if (!form.newAppointmentDate) {
+      next.newAppointmentDate = 'Choose a new date.';
+    } else {
+      const selected = new Date(form.newAppointmentDate);
+      selected.setHours(0, 0, 0, 0);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const maxStart = new Date(todayStart);
+      maxStart.setDate(todayStart.getDate() + 7);
+
+      if (selected < todayStart) {
+        next.newAppointmentDate = 'Date cannot be in the past.';
+      } else if (selected > maxStart) {
+        next.newAppointmentDate = 'Appointments can only be rescheduled up to 7 days in advance.';
+      }
+    }
+
     if (!form.newTimeSlot.trim()) next.newTimeSlot = 'Select a time slot.';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -94,7 +114,8 @@ export default function RescheduleModal({ appointment, onClose, onSuccess }) {
               className={`form-input ${errors.newAppointmentDate ? 'has-error' : ''}`}
               value={form.newAppointmentDate}
               onChange={(e) => setForm({ ...form, newAppointmentDate: e.target.value, newTimeSlot: '' })}
-              min={new Date().toISOString().split('T')[0]}
+              min={minDateStr}
+              max={maxDateStr}
             />
           </FormField>
 

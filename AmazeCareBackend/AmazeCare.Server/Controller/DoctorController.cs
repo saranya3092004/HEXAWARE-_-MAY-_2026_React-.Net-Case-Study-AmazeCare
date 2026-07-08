@@ -21,7 +21,7 @@ namespace AmazeCare.Server.Controller
 
         // ================= PUBLIC =================
 
-        // GET /api/v1/doctors — search by name, specialization, available day
+        // GET /api/doctors — search by name, specialization, available day
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> Search([FromQuery] DoctorSearchRequest request)
@@ -30,7 +30,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<List<DoctorResponse>>.OK(result));
         }
 
-        // GET /api/v1/doctors/{id} — profile with specializations + availability
+        // GET /api/doctors/{id} — profile with specializations + availability
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetProfile(int id)
@@ -39,9 +39,18 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<DoctorResponse>.OK(result));
         }
 
+        // GET /api/doctors/specializations — distinct list for dropdowns
+        [HttpGet("specializations")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSpecializations()
+        {
+            var result = await _doctorService.GetSpecializationsAsync();
+            return Ok(ApiResponse<List<string>>.OK(result));
+        }
+
         // ================= DOCTOR / ADMIN =================
 
-        // GET /api/v1/doctors/{id}/appointments — doctor's own appointments (upcoming + completed)
+        // GET /api/doctors/{id}/appointments — doctor's own appointments (upcoming + completed)
         [HttpGet("{id}/appointments")]
         [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> GetDoctorAppointments(int id, [FromQuery] bool upcomingOnly = false)
@@ -55,7 +64,7 @@ namespace AmazeCare.Server.Controller
 
         // ================= ADMIN — DOCTOR CRUD =================
 
-        // POST /api/v1/doctors — Admin creates doctor (User account + Doctor profile)
+        // POST /api/doctors — Admin creates doctor (User account + Doctor profile)
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateDoctor([FromBody] CreateDoctorRequest request)
@@ -64,7 +73,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<DoctorResponse>.Created(result, "Doctor created successfully."));
         }
 
-        // PUT /api/v1/doctors/{id} — Admin updates doctor profile
+        // PUT /api/doctors/{id} — Admin updates doctor profile
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDoctor(int id, [FromBody] UpdateDoctorRequest request)
@@ -73,7 +82,7 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<DoctorResponse>.OK(result, "Doctor updated successfully."));
         }
 
-        // DELETE /api/v1/doctors/{id} — Admin soft-deactivates doctor
+        // DELETE /api/doctors/{id} — Admin soft-deactivates doctor
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateDoctor(int id)
@@ -82,7 +91,6 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse.OK("Doctor deactivated successfully."));
         }
 
-                   // ================= HELPERS =================
         private (int CallerId, bool IsAdmin, bool IsDoctor) GetCallerContext()
         {
             var isAdmin = User.IsInRole("Admin");
