@@ -324,7 +324,7 @@ namespace AmazeCare.Server.Services.Implementations
             }
         }
 
-        public async Task<AppointmentResponse> RescheduleAsync(int appointmentId, int callerId, bool isAdmin, RescheduleAppointmentRequest request)
+        public async Task<AppointmentResponse> RescheduleAsync(int appointmentId, int callerId, bool isAdmin, bool isDoctor, RescheduleAppointmentRequest request)
         {
             try
             {
@@ -335,11 +335,14 @@ namespace AmazeCare.Server.Services.Implementations
                     throw new NotFoundException("Appointment not found.");
                 }
 
-                if (!isAdmin && appointment.PatientId != callerId)
+                // Authorization — patient can reschedule own, doctor can reschedule own, admin can reschedule any
+                if (!isAdmin)
                 {
-                    _logger.LogWarning("Security violation! CallerId {CallerId} blocked from rescheduling AppointmentId {AppointmentId}.",
-                        callerId, appointmentId);
-                    throw new ForbiddenException("You are not authorized to reschedule this appointment.");
+                    if (isDoctor && appointment.DoctorId != callerId)
+                        throw new ForbiddenException("You are not authorized to reschedule this appointment.");
+
+                    if (!isDoctor && appointment.PatientId != callerId)
+                        throw new ForbiddenException("You are not authorized to reschedule this appointment.");
                 }
 
                 if (appointment.Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled or AppointmentStatus.Rejected)
@@ -350,45 +353,35 @@ namespace AmazeCare.Server.Services.Implementations
                 }
 
                 if (!IsValidSlot(request.NewTimeSlot))
-                {
-                    _logger.LogWarning("RescheduleAppointment failed: NewTimeSlot '{TimeSlot}' is outside business hours ({Start}-{End}) or not aligned to the {Duration}-minute grid.",
-                        request.NewTimeSlot, WorkStart, WorkEnd, SlotDuration.TotalMinutes);
-                    throw new BadRequestException(
-                        $"'{request.NewTimeSlot}' is not a valid appointment slot. Slots run from {WorkStart:hh\\:mm} to {WorkEnd:hh\\:mm} in {SlotDuration.TotalMinutes}-minute increments.");
-                }
+                    throw new BadRequestException($"'{request.NewTimeSlot}' is not a valid appointment slot.");
 
                 var newSlotStart = GetSlotStartDateTime(request.NewAppointmentDate, request.NewTimeSlot);
                 var earliestBookable = NowInIst().AddMinutes(MinimumBookingLeadTimeMinutes);
+
                 if (newSlotStart <= earliestBookable)
-                {
-                    _logger.LogWarning("RescheduleAppointment failed: requested slot {SlotStart} does not meet the {Buffer}-minute minimum lead time.",
-                        newSlotStart, MinimumBookingLeadTimeMinutes);
-                    throw new BadRequestException(
-                        $"Appointments must be rescheduled to at least {MinimumBookingLeadTimeMinutes} minutes from now. Please choose a later time slot.");
-                }
+                    throw new BadRequestException($"Appointments must be rescheduled to at least {MinimumBookingLeadTimeMinutes} minutes from now.");
 
                 if (await _appointmentRepository.HasConflictingAppointmentAsync(
                         appointment.DoctorId, request.NewAppointmentDate, request.NewTimeSlot, appointment.AppointmentId))
-                {
-                    _logger.LogWarning("RescheduleAppointment failed: DoctorId {DoctorId} already booked for {Date} {TimeSlot}.",
-                        appointment.DoctorId, request.NewAppointmentDate.Date, request.NewTimeSlot);
                     throw new ConflictException("The doctor already has an appointment booked for that new date and time slot.");
-                }
 
                 appointment.AppointmentDate = request.NewAppointmentDate.Date;
                 appointment.TimeSlot = request.NewTimeSlot;
-                appointment.Status = AppointmentStatus.Rescheduled;
+
+                // Patient reschedule → back to Pending (doctor must re-confirm the new slot)
+                // Doctor/Admin reschedule → Rescheduled (they're deciding on behalf of the patient)
+                appointment.Status = (isDoctor || isAdmin)
+                    ? AppointmentStatus.Rescheduled
+                    : AppointmentStatus.Pending;
+
                 await _appointmentRepository.UpdateAsync(appointment);
 
-                _logger.LogInformation("RescheduleAppointment succeeded: AppointmentId {AppointmentId}, NewDate={Date}, NewSlot={Slot}.",
-                    appointmentId, request.NewAppointmentDate.Date, request.NewTimeSlot);
+                _logger.LogInformation("RescheduleAppointment succeeded: AppointmentId {AppointmentId}, NewDate={Date}, NewSlot={Slot}, NewStatus={Status}.",
+                    appointmentId, request.NewAppointmentDate.Date, request.NewTimeSlot, appointment.Status);
 
                 return MapToResponse(appointment);
             }
-            catch (AppException)
-            {
-                throw;
-            }
+            catch (AppException) { throw; }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while rescheduling AppointmentId {AppointmentId}.", appointmentId);

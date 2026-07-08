@@ -15,9 +15,8 @@ export const cancelAppointment = (id, payload) =>
 export const rescheduleAppointment = (id, payload) =>
   apiClient.put(`/appointments/${id}/reschedule`, payload);
 
-export function getAvailableSlots(doctorId, date) {
-  return apiClient.get('/appointments/available-slots', { params: { doctorId, date } });
-}
+export const getAvailableSlots = (doctorId, date) =>
+  apiClient.get(`/appointments/slots`, { params: { doctorId, date } });
 
 export const confirmAppointment = (id) =>
   apiClient.put(`/appointments/${id}/confirm`);

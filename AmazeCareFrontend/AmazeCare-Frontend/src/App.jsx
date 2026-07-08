@@ -10,6 +10,11 @@ import PatientProfilePage from './pages/patient/PatientProfilePage';
 import DoctorAppointmentsPage from './pages/doctor/DoctorAppointmentsPage';
 import DoctorConsultationsPage from './pages/doctor/DoctorConsultationsPage';
 import CreateConsultationPage from './pages/doctor/CreateConsultationPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
+import AdminDoctorsPage from './pages/admin/AdminDoctorsPage';
+import AdminReportsPage from './pages/admin/AdminReportsPage';
+import AdminPatientsPage from './pages/admin/AdminPatientsPage';
 
 function RootRedirect() {
   const { isAuthenticated, role } = useAuth();
@@ -72,14 +77,21 @@ export default function App() {
 />
 
         {/* Admin routes */}
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <div>Admin Dashboard — coming next</div>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin/patients"
+  element={<ProtectedRoute allowedRoles={['Admin']}><AdminPatientsPage /></ProtectedRoute>}
+/>
+       <Route path="/admin/dashboard"
+  element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboardPage /></ProtectedRoute>}
+/>
+<Route path="/admin/appointments"
+  element={<ProtectedRoute allowedRoles={['Admin']}><AdminAppointmentsPage /></ProtectedRoute>}
+/>
+<Route path="/admin/doctors"
+  element={<ProtectedRoute allowedRoles={['Admin']}><AdminDoctorsPage /></ProtectedRoute>}
+/>
+<Route path="/admin/reports"
+  element={<ProtectedRoute allowedRoles={['Admin']}><AdminReportsPage /></ProtectedRoute>}
+/>
 
         <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} />
       </Routes>

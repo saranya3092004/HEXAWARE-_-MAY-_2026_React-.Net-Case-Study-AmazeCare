@@ -1,13 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getDoctorAppointments } from '../../api/doctors';
-import {
-  confirmAppointment,
-  rejectAppointment,
-} from '../../api/appointments';
+import { confirmAppointment, rejectAppointment } from '../../api/appointments';
 import DoctorLayout from '../../layouts/DoctorLayout';
+import RescheduleModal from '../../components/patient/RescheduleModal';
 import { isUserFacingError, GENERIC_ERROR } from '../../utils/errors';
-
 
 function StatusBadge({ status }) {
   return (
@@ -17,22 +15,32 @@ function StatusBadge({ status }) {
 
 export default function DoctorAppointmentsPage() {
   const { roleSpecificId } = useAuth();
+  const navigate = useNavigate();
+
   const [upcoming, setUpcoming] = useState([]);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
 
   const load = useCallback(async () => {
-    if (!roleSpecificId) return;
+    if (!roleSpecificId) {
+      setLoading(false);
+      setError('Could not identify your doctor account. Please sign in again.');
+      return;
+    }
+
     setLoading(true);
     setError('');
+
     try {
       const { data } = await getDoctorAppointments(roleSpecificId);
       const all = data.data ?? [];
+
       setUpcoming(
-        all.filter((a) =>
-          !['Completed', 'Cancelled', 'Rejected'].includes(a.status)
+        all.filter(
+          (a) => !['Completed', 'Cancelled', 'Rejected'].includes(a.status)
         )
       );
       setCompleted(all.filter((a) => a.status === 'Completed'));
@@ -82,7 +90,9 @@ export default function DoctorAppointmentsPage() {
     <DoctorLayout>
       <div className="page-header">
         <h1 className="page-title">Appointments</h1>
-        <p className="page-subtitle">Manage your upcoming and completed appointments.</p>
+        <p className="page-subtitle">
+          Manage your upcoming and completed appointments.
+        </p>
       </div>
 
       {(error || actionError) && (
@@ -91,12 +101,13 @@ export default function DoctorAppointmentsPage() {
         </div>
       )}
 
-      {/* ── Upcoming ── */}
+      {/* ── Upcoming ─────────────────────────────────────────── */}
       <h2 className="section-label">Upcoming</h2>
       <div className="data-table-wrap" style={{ marginBottom: '2.5rem' }}>
         {upcoming.length === 0 ? (
           <div className="empty-state">
             <p className="empty-state-title">No upcoming appointments</p>
+            <p>New appointment requests will appear here.</p>
           </div>
         ) : (
           <table className="data-table">
@@ -114,32 +125,74 @@ export default function DoctorAppointmentsPage() {
               {upcoming.map((a) => (
                 <tr key={a.appointmentId}>
                   <td>{a.patientName}</td>
-                  <td>{new Date(a.appointmentDate).toLocaleDateString('en-IN')}</td>
+                  <td>
+                    {new Date(a.appointmentDate).toLocaleDateString('en-IN')}
+                  </td>
                   <td>{a.timeSlot}</td>
                   <td>{a.reason ?? '—'}</td>
-                  <td><StatusBadge status={a.status} /></td>
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
-                    {a.status === 'Pending' && (
-                      <>
+                  <td>
+                    <StatusBadge status={a.status} />
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+
+                      {/* ── Pending: Confirm / Reject / Reschedule ── */}
+                      {a.status === 'Pending' && (
+                        <>
+                          <button
+                            className="btn-sm btn-sm--confirm"
+                            onClick={() => handleConfirm(a.appointmentId)}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            className="btn-sm btn-sm--danger"
+                            onClick={() => handleReject(a.appointmentId)}
+                          >
+                            Reject
+                          </button>
+                          <button
+                            className="btn-sm btn-sm--outline"
+                            onClick={() => setRescheduleTarget(a)}
+                          >
+                            Reschedule
+                          </button>
+                        </>
+                      )}
+
+                      {/* ── Confirmed: Record Consultation / Reschedule ── */}
+                      {a.status === 'Confirmed' && (
+                        <>
+                          <button
+                            className="btn-sm btn-sm--confirm"
+                            onClick={() =>
+                              navigate(
+                                `/doctor/consultations/new?appointmentId=${a.appointmentId}`
+                              )
+                            }
+                          >
+                            Record consultation
+                          </button>
+                          <button
+                            className="btn-sm btn-sm--outline"
+                            onClick={() => setRescheduleTarget(a)}
+                          >
+                            Reschedule
+                          </button>
+                        </>
+                      )}
+
+                      {/* ── Rescheduled (by doctor): still show Reschedule option ── */}
+                      {a.status === 'Rescheduled' && (
                         <button
-                          className="btn-sm btn-sm--confirm"
-                          onClick={() => handleConfirm(a.appointmentId)}
+                          className="btn-sm btn-sm--outline"
+                          onClick={() => setRescheduleTarget(a)}
                         >
-                          Confirm
+                          Reschedule again
                         </button>
-                        <button
-                          className="btn-sm btn-sm--danger"
-                          onClick={() => handleReject(a.appointmentId)}
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    {a.status === 'Confirmed' && (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        Confirmed
-                      </span>
-                    )}
+                      )}
+
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -148,7 +201,7 @@ export default function DoctorAppointmentsPage() {
         )}
       </div>
 
-      {/* ── Completed ── */}
+      {/* ── Completed ─────────────────────────────────────────── */}
       <h2 className="section-label">Completed</h2>
       <div className="data-table-wrap">
         {completed.length === 0 ? (
@@ -170,16 +223,32 @@ export default function DoctorAppointmentsPage() {
               {completed.map((a) => (
                 <tr key={a.appointmentId}>
                   <td>{a.patientName}</td>
-                  <td>{new Date(a.appointmentDate).toLocaleDateString('en-IN')}</td>
+                  <td>
+                    {new Date(a.appointmentDate).toLocaleDateString('en-IN')}
+                  </td>
                   <td>{a.timeSlot}</td>
                   <td>{a.reason ?? '—'}</td>
-                  <td><StatusBadge status={a.status} /></td>
+                  <td>
+                    <StatusBadge status={a.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* ── Reschedule modal ──────────────────────────────────── */}
+      {rescheduleTarget && (
+        <RescheduleModal
+          appointment={rescheduleTarget}
+          onClose={() => setRescheduleTarget(null)}
+          onSuccess={() => {
+            setRescheduleTarget(null);
+            load();
+          }}
+        />
+      )}
     </DoctorLayout>
   );
 }

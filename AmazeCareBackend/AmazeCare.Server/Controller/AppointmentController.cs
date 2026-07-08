@@ -79,13 +79,13 @@ namespace AmazeCare.Server.Controller
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment cancelled successfully."));
         }
 
-        // PUT /api/v1/appointments/{id}/reschedule
+        // PUT /api/appointments/{id}/reschedule — Patient, Doctor, or Admin
         [HttpPut("{id}/reschedule")]
-        [Authorize(Roles = "User,Admin")]
+        [Authorize(Roles = "User,Doctor,Admin")]
         public async Task<IActionResult> Reschedule(int id, [FromBody] RescheduleAppointmentRequest request)
         {
-            var (callerId, isAdmin, _) = GetCallerContext();
-            var result = await _appointmentService.RescheduleAsync(id, callerId, isAdmin, request);
+            var (callerId, isAdmin, isDoctor) = GetCallerContext();
+            var result = await _appointmentService.RescheduleAsync(id, callerId, isAdmin, isDoctor, request);
             return Ok(ApiResponse<AppointmentResponse>.OK(result, "Appointment rescheduled successfully."));
         }
 

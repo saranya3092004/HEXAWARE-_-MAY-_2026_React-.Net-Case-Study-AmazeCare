@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AmazeCare.Server.Modules.AdminModule.Controllers
 {
     [ApiController]
-    [Route("api/v1/admin")]
+    [Route("api/admin")]
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {

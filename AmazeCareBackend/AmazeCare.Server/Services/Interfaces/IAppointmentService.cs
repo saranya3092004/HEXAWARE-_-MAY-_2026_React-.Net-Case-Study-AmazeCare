@@ -10,7 +10,7 @@ namespace AmazeCare.Server.Services.Interfaces
         Task<AppointmentResponse> ConfirmAsync(int appointmentId, int callerId, bool isAdmin);
         Task<AppointmentResponse> RejectAsync(int appointmentId, int callerId, bool isAdmin, RejectAppointmentRequest request);
         Task<AppointmentResponse> CancelAsync(int appointmentId, int callerId, bool isAdmin, CancelAppointmentRequest request);
-        Task<AppointmentResponse> RescheduleAsync(int appointmentId, int callerId, bool isAdmin, RescheduleAppointmentRequest request);
+        Task<AppointmentResponse> RescheduleAsync(int appointmentId, int callerId, bool isAdmin, bool isDoctor, RescheduleAppointmentRequest request);
         Task<AppointmentResponse> CompleteAsync(int appointmentId, int callerId);
         Task<List<string>> GetAvailableSlotsAsync(int doctorId, DateTime date);
     }
