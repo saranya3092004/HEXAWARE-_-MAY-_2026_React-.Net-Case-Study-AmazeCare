@@ -1,0 +1,104 @@
+pipeline {
+    agent any
+
+    environment {
+        DOTNET_CLI_TELEMETRY_OPTOUT = '1'
+        BACKEND_DIR  = 'AmazeCareBackend'
+        FRONTEND_DIR = 'AmazeCareFrontend/AmazeCare-FrontEnd'
+        PUBLISH_DIR  = 'publish'
+    }
+
+    tools {
+        nodejs 'NodeJS-20'
+        jdk 'JAVA_HOME' 
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+               git url: 'https://github.com/saranya3092004/HEXAWARE-_-MAY-_2026_React-.Net-Case-Study-AmazeCare', branch: 'main'
+            }
+        }
+
+        stage('Restore backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    bat 'dotnet restore'
+                }
+            }
+        }
+
+        stage('Build backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    bat 'dotnet build --configuration Release --no-restore'
+                }
+            }
+        }
+
+        stage('Test backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    bat 'dotnet test --configuration Release --no-build --verbosity normal'
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: '**/TestResults/*.xml'
+                }
+            }
+        }
+
+        stage('Install frontend') {
+            steps {
+                dir("${FRONTEND_DIR}") {
+                    bat 'npm install' 
+                }
+            }
+        }
+
+        stage('Build frontend') {
+            steps {
+                dir("${FRONTEND_DIR}") {
+                    bat 'npm run build'
+                }
+            }
+        }
+
+        stage('Publish backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    bat "dotnet publish --configuration Release --no-build --output ../${PUBLISH_DIR}/backend"
+                }
+            }
+        }
+
+       stage('Package frontend') {
+            steps {
+                dir("AmazeCareFrontend/AmazeCare-FrontEnd") {
+                    bat "xcopy /E /I /Y dist ..\\..\\${PUBLISH_DIR}\\frontend\\"
+                }
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: "${PUBLISH_DIR}/**/*", fingerprint: true
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo 'Build succeeded.'
+        }
+        failure {
+            echo 'Build failed — check the console output above.'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
