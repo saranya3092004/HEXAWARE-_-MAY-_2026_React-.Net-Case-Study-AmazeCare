@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="AmazeCare.Server.Tests/AmazeCare.Server.Tests.csproj" />
   <Project Path="AmazeCare.Server/AmazeCare.Server.csproj" />
 </Solution>

@@ -9,7 +9,6 @@ export default function DoctorConsultationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
-  const [modalMode, setModalMode] = useState('view'); // 'view' | 'edit'
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,7 +38,7 @@ export default function DoctorConsultationsPage() {
     <DoctorLayout>
       <div className="page-header">
         <h1 className="page-title">Consultations</h1>
-        <p className="page-subtitle">View and update consultation records.</p>
+        <p className="page-subtitle">View your recorded consultations.</p>
       </div>
 
       {error && (
@@ -74,18 +73,12 @@ export default function DoctorConsultationsPage() {
                     {c.currentSymptoms}
                   </td>
                   <td>{c.diagnosis ?? '—'}</td>
-                  <td style={{ display: 'flex', gap: '0.5rem' }}>
+                  <td>
                     <button
                       className="btn-sm btn-sm--outline"
-                      onClick={() => { setSelected(c); setModalMode('view'); }}
+                      onClick={() => setSelected(c)}
                     >
                       View
-                    </button>
-                    <button
-                      className="btn-sm btn-sm--confirm"
-                      onClick={() => { setSelected(c); setModalMode('edit'); }}
-                    >
-                      Edit
                     </button>
                   </td>
                 </tr>
@@ -98,9 +91,8 @@ export default function DoctorConsultationsPage() {
       {selected && (
         <ConsultationModal
           consultation={selected}
-          mode={modalMode}
+          mode="view"
           onClose={() => setSelected(null)}
-          onSuccess={() => { setSelected(null); load(); }}
         />
       )}
     </DoctorLayout>

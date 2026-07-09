@@ -98,8 +98,8 @@ namespace AmazeCare.Server.Services.Implementations
 
                 if (appointment.DoctorId != doctorId)
                 {
-                    _logger.LogWarning("Security violation! DoctorId {DoctorId} blocked from creating a consultation for AppointmentId {AppointmentId} (belongs to DoctorId {OwnerId}).",
-                        doctorId, request.AppointmentId, appointment.DoctorId);
+                    _logger.LogWarning("Security violation! DoctorId {DoctorId} blocked from creating consultation for AppointmentId {AppointmentId}.",
+                        doctorId, request.AppointmentId);
                     throw new ForbiddenException("You are not authorized to record a consultation for this appointment.");
                 }
 
@@ -133,20 +133,20 @@ namespace AmazeCare.Server.Services.Implementations
                 };
 
                 consultation = await _consultationRepository.AddAsync(consultation);
-                consultation = await _consultationRepository.GetByIdAsync(consultation.ConsultationId) ?? consultation;
+                appointment.Status = AppointmentStatus.Completed;
+                await _appointmentRepository.UpdateAsync(appointment);
 
-                _logger.LogInformation("CreateConsultation succeeded: ConsultationId={ConsultationId}, AppointmentId={AppointmentId}, DoctorId={DoctorId}.",
+                _logger.LogInformation(
+                    "CreateConsultation succeeded and appointment auto-completed: ConsultationId={ConsultationId}, AppointmentId={AppointmentId}, DoctorId={DoctorId}.",
                     consultation.ConsultationId, request.AppointmentId, doctorId);
 
+                consultation = await _consultationRepository.GetByIdAsync(consultation.ConsultationId) ?? consultation;
                 return MapToResponse(consultation);
             }
-            catch (AppException)
-            {
-                throw;
-            }
+            catch (AppException) { throw; }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while creating a consultation for AppointmentId {AppointmentId}.", request.AppointmentId);
+                _logger.LogError(ex, "Unexpected error while creating consultation for AppointmentId {AppointmentId}.", request.AppointmentId);
                 throw;
             }
         }

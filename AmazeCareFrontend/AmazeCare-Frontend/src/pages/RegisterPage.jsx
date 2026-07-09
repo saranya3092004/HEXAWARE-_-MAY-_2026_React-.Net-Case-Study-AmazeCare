@@ -7,7 +7,6 @@ import '../components/forms.css';
 import { useAuth } from '../context/AuthContext';
 import { isUserFacingError, GENERIC_ERROR } from '../utils/errors';
 
-
 const initialForm = {
   fullName: '',
   email: '',
@@ -39,7 +38,13 @@ export default function RegisterPage() {
     } else if (!/^[6-9]\d{9}$/.test(form.phoneNumber.trim())) {
       next.phoneNumber = 'Enter a valid 10-digit Indian mobile number.';
     }
-    if (!form.dateOfBirth) next.dateOfBirth = 'Enter your date of birth.';
+
+    if (!form.dateOfBirth) {
+      next.dateOfBirth = 'Enter your date of birth.';
+    } else if (new Date(form.dateOfBirth) > new Date()) {
+      next.dateOfBirth = 'Date of birth cannot be in the future.';
+    }
+
     if (!form.password) {
       next.password = 'Create a password.';
     } else if (form.password.length < 8) {
@@ -57,34 +62,35 @@ export default function RegisterPage() {
     setServerError('');
     if (!validate()) return;
 
- setIsSubmitting(true);
-try {
-  const response = await registerPatient({
-    fullName: form.fullName,
-    email: form.email,
-    phoneNumber: form.phoneNumber,
-    password: form.password,
-    dateOfBirth: form.dateOfBirth,
-    gender: form.gender,
-  });
+    setIsSubmitting(true);
+    try {
+      const response = await registerPatient({
+        fullName: form.fullName,
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        password: form.password,
+        dateOfBirth: form.dateOfBirth,
+        gender: form.gender,
+      });
 
-login({
-  token: response.token,
-  role: response.role,
-  roleSpecificId: response.roleSpecificId,
-  userId: response.userId,
-  fullName: response.fullName,
-});  navigate('/patient/appointments');
-} catch (err) {
-  if (isUserFacingError(err)) {
-    setServerError(err.message);
-  } else {
-    console.error('Register error:', err);
-    setServerError(GENERIC_ERROR);
-  }
-} finally {
-  setIsSubmitting(false);
-}
+      login({
+        token: response.token,
+        role: response.role,
+        roleSpecificId: response.roleSpecificId,
+        userId: response.userId,
+        fullName: response.fullName,
+      });
+      navigate('/patient/appointments');
+    } catch (err) {
+      if (isUserFacingError(err)) {
+        setServerError(err.message);
+      } else {
+        console.error('Register error:', err);
+        setServerError(GENERIC_ERROR);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -135,6 +141,7 @@ login({
             className={`form-input ${errors.dateOfBirth ? 'has-error' : ''}`}
             value={form.dateOfBirth}
             onChange={(e) => update('dateOfBirth', e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
           />
         </FormField>
 
@@ -142,13 +149,12 @@ login({
           <select
             className="form-input"
             value={form.gender}
-            onChange={(e) => update('gender',  Number(e.target.value))}
+            onChange={(e) => update('gender', Number(e.target.value))}
           >
             <option value={0}>Male</option>
             <option value={1}>Female</option>
             <option value={2}>Other</option>
             <option value={3}>Prefer Not To Say</option>
-
           </select>
         </FormField>
 

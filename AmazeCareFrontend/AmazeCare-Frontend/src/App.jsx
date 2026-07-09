@@ -15,6 +15,7 @@ import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
 import AdminDoctorsPage from './pages/admin/AdminDoctorsPage';
 import AdminReportsPage from './pages/admin/AdminReportsPage';
 import AdminPatientsPage from './pages/admin/AdminPatientsPage';
+import HomePage from './pages/HomePage';
 
 function RootRedirect() {
   const { isAuthenticated, role } = useAuth();
@@ -28,7 +29,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<RootRedirect />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
